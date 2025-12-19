@@ -3,40 +3,110 @@ import { OilData, FAQItem } from './types';
 
 // 五力數值參考自標準皂化價與脂肪酸比例表
 export const OILS: OilData[] = [
+  // 基礎三油
   { 
     id: 'coconut', name: '椰子油 (Coconut)', ins: 258, sap: 0.190, 
     hardness: 79, cleansing: 67, conditioning: 10, bubbly: 67, creamy: 12,
-    description: '【功效：深層清潔、硬度、起泡】具有極強的洗淨力，能產生大且豐富的泡沫。是製作手工皂不可或缺的基礎油脂，能讓皂體堅硬不易軟爛。' 
+    description: '【基礎類】具有極強的洗淨力，能產生大且豐富的泡沫。是製作手工皂不可或缺的基礎油脂，能讓皂體堅硬。' 
   },
   { 
     id: 'palm', name: '棕櫚油 (Palm)', ins: 145, sap: 0.141, 
     hardness: 50, cleansing: 1, conditioning: 49, bubbly: 1, creamy: 49,
-    description: '【功效：硬度、耐用度、紮實度】主要提供手工皂的堅硬度，讓皂體在水水中不易溶化變形。雖然沒什麼泡沫，但能使泡沫變得細緻。' 
+    description: '【基礎類】主要提供手工皂的堅硬度，讓皂體在水中不易溶化變形。雖然沒什麼泡沫，但能使泡沫變得細緻。' 
   },
   { 
     id: 'olive', name: '橄欖油 (Olive)', ins: 109, sap: 0.134, 
     hardness: 17, cleansing: 0, conditioning: 82, bubbly: 0, creamy: 17,
-    description: '【功效：保濕滋潤、深層修復、細緻泡】含有豐富的維他命與角鯊烯，能深層滋潤皮膚並鎖住水分。洗感溫和，適合嬰兒及過敏性肌膚。' 
+    description: '【基礎類】含有豐富的維他命與角鯊烯。洗感溫和，適合嬰兒及過敏性肌膚。' 
+  },
+  // 1. 高級滋潤類
+  { 
+    id: 'avocado', name: '酪梨油 (Avocado)', ins: 129, sap: 0.133, 
+    hardness: 22, cleansing: 0, conditioning: 70, bubbly: 0, creamy: 22,
+    description: '【高級滋潤】深層清潔、極度溫和。含有豐富維生素 A、D、E，非常適合嬰兒、過敏性或乾燥肌。未精製款成皂呈淡綠色。' 
+  },
+  { 
+    id: 'macadamia', name: '澳洲堅果油 (Macadamia)', ins: 119, sap: 0.139, 
+    hardness: 18, cleansing: 0, conditioning: 82, bubbly: 0, creamy: 18,
+    description: '【高級滋潤】抗老化之王。富含棕櫚油酸，與人類皮脂接近，容易被吸收，有助修復老化肌膚。' 
+  },
+  { 
+    id: 'hazelnut', name: '榛果油 (Hazelnut)', ins: 94, sap: 0.136, 
+    hardness: 10, cleansing: 0, conditioning: 90, bubbly: 0, creamy: 10,
+    description: '【高級滋潤】保濕且清爽。滲透力極佳，雖滋潤但不阻塞毛孔，適合油性或混合肌保濕用。' 
+  },
+  { 
+    id: 'apricot', name: '杏桃核仁油 (Apricot Kernel)', ins: 91, sap: 0.135, 
+    hardness: 7, cleansing: 0, conditioning: 93, bubbly: 0, creamy: 7,
+    description: '【高級滋潤】輕柔透氣。比甜杏仁油更清爽，富含礦物質，能舒緩發癢乾燥皮膚。' 
   },
   { 
     id: 'sweet_almond', name: '甜杏仁油 (Sweet Almond)', ins: 97, sap: 0.136, 
     hardness: 7, cleansing: 0, conditioning: 89, bubbly: 0, creamy: 7,
-    description: '【功效：軟化皮膚、保濕、舒緩】洗感非常輕柔滑順，能改善皮膚乾燥癢。對於紅腫或受傷的皮膚有極佳的舒緩與修復效果。' 
+    description: '【高級滋潤】洗感輕柔滑順，能軟化皮膚，改善乾燥癢感。' 
+  },
+  // 2. 硬度與質感調節
+  { 
+    id: 'cocoa_butter', name: '可可脂 (Cocoa Butter)', ins: 157, sap: 0.137, 
+    hardness: 61, cleansing: 0, conditioning: 38, bubbly: 0, creamy: 61,
+    description: '【質感調節】增加硬度與保護膜。能在皮膚形成鎖水膜，添加量建議 5~15%，過多皂體易脆。' 
+  },
+  { 
+    id: 'mango_butter', name: '芒果脂 (Mango Butter)', ins: 146, sap: 0.137, 
+    hardness: 49, cleansing: 0, conditioning: 51, bubbly: 0, creamy: 49,
+    description: '【質感調節】類可可脂但更溫和。保濕效果佳，增加皂硬度與滑順感。' 
+  },
+  { 
+    id: 'shea_butter', name: '乳油木果脂 (Shea)', ins: 116, sap: 0.128, 
+    hardness: 45, cleansing: 0, conditioning: 54, bubbly: 0, creamy: 45,
+    description: '【質感調節】防護屏障、抗敏、乳霜洗感。含有高度非皂化成分，能在皮膚形成保護膜。' 
+  },
+  { 
+    id: 'jojoba', name: '荷荷芭油 (Jojoba)', ins: 11, sap: 0.069, 
+    hardness: 0, cleansing: 0, conditioning: 100, bubbly: 0, creamy: 0,
+    description: '【質感調節】液態蠟、洗髮神器。能在表面形成保護層，常作為超脂添加，讓洗感升級。' 
+  },
+  // 3. 特殊療效與修復
+  { 
+    id: 'neem', name: '苦楝油 (Neem)', ins: 124, sap: 0.139, 
+    hardness: 40, cleansing: 0, conditioning: 60, bubbly: 0, creamy: 40,
+    description: '【特殊療效】抗菌驅蟲。對抗濕疹、痘痘效果極佳。味道極重，建議搭配強效精油。' 
+  },
+  { 
+    id: 'wheatgerm', name: '小麥胚芽油 (Wheatgerm)', ins: 58, sap: 0.131, 
+    hardness: 15, cleansing: 0, conditioning: 85, bubbly: 0, creamy: 15,
+    description: '【特殊療效】抗氧化、維生E寶庫。延緩肥皂酸敗，修復受損肌膚（疤痕）。' 
+  },
+  { 
+    id: 'evening_primrose', name: '月見草油 (Evening Primrose)', ins: 30, sap: 0.135, 
+    hardness: 5, cleansing: 0, conditioning: 95, bubbly: 0, creamy: 5,
+    description: '【特殊療效】改善異位性皮膚炎。富含亞麻油酸，極易氧化，建議作為超脂。' 
+  },
+  { 
+    id: 'rosehip', name: '玫瑰果油 (Rosehip)', ins: 16, sap: 0.135, 
+    hardness: 5, cleansing: 0, conditioning: 95, bubbly: 0, creamy: 5,
+    description: '【特殊療效】修復疤痕、美白。幫助淡化細紋與色素，昂貴且易氧化。' 
   },
   { 
     id: 'castor', name: '蓖麻油 (Castor)', ins: 95, sap: 0.128, 
     hardness: 0, cleansing: 0, conditioning: 98, bubbly: 90, creamy: 90,
-    description: '【功效：增加泡量、泡沫持久、柔軟】具有吸濕特性，能將水分吸收在皮膚表面。其特有的蓖麻酸能產生絲綢般棉密、且不易消失的泡沫。' 
+    description: '【特殊療效】增加泡量與泡沫持久。具有視濕特性，能產生絲綢般棉密泡。' 
+  },
+  // 4. 本土與平價
+  { 
+    id: 'camellia', name: '山茶花油 (Camellia)', ins: 108, sap: 0.136, 
+    hardness: 10, cleansing: 0, conditioning: 90, bubbly: 0, creamy: 10,
+    description: '【本土平價】東方橄欖油。台灣在地好油，對頭髮頭皮極佳。比橄欖油清爽。' 
   },
   { 
-    id: 'shea_butter', name: '乳油木果脂 (Shea Butter)', ins: 116, sap: 0.128, 
-    hardness: 45, cleansing: 0, conditioning: 54, bubbly: 0, creamy: 45,
-    description: '【功效：防護屏障、抗敏、乳霜洗感】含有高度非皂化成分，能在皮膚形成保護膜。能產生如奶油般細緻的泡沫，具優異的保濕效果。' 
+    id: 'canola', name: '芥花油 (Canola)', ins: 56, sap: 0.132, 
+    hardness: 6, cleansing: 0, conditioning: 94, bubbly: 0, creamy: 6,
+    description: '【本土平價】練習用、高保濕。價格便宜，泡沫細緻溫和，常用於取代橄欖油。' 
   },
   { 
-    id: 'rice_bran', name: '糙米油 (Rice Bran)', ins: 70, sap: 0.128, 
-    hardness: 26, cleansing: 0, conditioning: 73, bubbly: 0, creamy: 26,
-    description: '【功效：抗老化、美白、軟化角質】富含維他命E與穀維素，能抑制黑色素生成。洗感清爽不油膩，能使肥皂產生獨特的洗淨力。' 
+    id: 'lard', name: '豬油 (Lard)', ins: 139, sap: 0.138, 
+    hardness: 41, cleansing: 0, conditioning: 59, bubbly: 0, creamy: 41,
+    description: '【本土平價】傳統古早味、極硬。泡沫綿密、皂體雪白堅硬且溫和。' 
   },
 ];
 
@@ -55,3 +125,13 @@ export const QUALITY_RANGES = {
   bubbly: { min: 14, max: 46, label: '起泡力' },
   creamy: { min: 16, max: 48, label: '穩定度' },
 };
+
+// 統一五力視覺語彙定義
+// Fix: Added 'bg' property and corrected 'tailwind' to include 'bg-' prefix to satisfy component logic for text/bg colors.
+export const QUALITY_UI = {
+  hardness: { label: '硬度', icon: 'Shield', color: '#78716c', tailwind: 'bg-stone-500', bg: 'bg-stone-500' },
+  cleansing: { label: '清潔', icon: 'Sparkles', color: '#e11d48', tailwind: 'bg-rose-600', bg: 'bg-rose-600' },
+  conditioning: { label: '保濕', icon: 'Droplets', color: '#0284c7', tailwind: 'bg-sky-600', bg: 'bg-sky-600' },
+  bubbly: { label: '起泡', icon: 'Zap', color: '#ea580c', tailwind: 'bg-orange-600', bg: 'bg-orange-600' },
+  creamy: { label: '穩定', icon: 'Waves', color: '#16a34a', tailwind: 'bg-green-600', bg: 'bg-green-600' },
+} as const;
