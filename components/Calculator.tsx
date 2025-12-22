@@ -21,6 +21,8 @@ import {
   Waves,
   ArrowDownCircle,
   ArrowUpCircle,
+  AlertTriangle,
+  AlertCircle,
   Check,
   ZapIcon,
   Circle,
@@ -521,8 +523,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
 
   const getStatusUI = (status: 'none' | 'low' | 'high' | 'ideal') => {
     switch (status) {
-      case 'low': return { color: 'text-orange-500', bg: 'bg-orange-500', icon: <ArrowDownCircle className="w-4 h-4" />, label: '數值不足' };
-      case 'high': return { color: 'text-red-500', bg: 'bg-red-500', icon: <ArrowUpCircle className="w-4 h-4" />, label: '數值過度' };
+      case 'low': return { color: 'text-orange-500', bg: 'bg-orange-500', icon: <AlertCircle className="w-4 h-4" />, label: '數值不足' };
+      case 'high': return { color: 'text-red-500', bg: 'bg-red-500', icon: <AlertTriangle className="w-4 h-4" />, label: '數值過度' };
       case 'ideal': return { color: 'text-green-600', bg: 'bg-green-600', icon: <CheckCircle2 className="w-4 h-4" />, label: '理想比例' };
       default: return { color: 'text-stone-300', bg: 'bg-stone-100', icon: null, label: '' };
     }
@@ -834,164 +836,173 @@ export const Calculator: React.FC<CalculatorProps> = ({
           )}
         </div>
 
-        <div className="xl:col-span-5 flex flex-col gap-6">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 relative">
-            {hoveredOil && (
-              <div className={`absolute top-0 right-0 p-3 text-white text-[10px] font-black rounded-bl-2xl z-20 animate-pulse shadow-lg flex items-center gap-2 ${previewMode === 'reduction' ? 'bg-rose-500' : 'bg-amber-500'}`}>
-                <Sparkles className="w-3 h-3" /> 數據預覽：{hoveredOil.name} {previewMode === 'reduction' ? '(調降)' : '(補位)'}
+        <div className="xl:col-span-5">
+          <div className="xl:sticky xl:top-8 space-y-6">
+            {/* 4. 五力分布 (已搬移至此) */}
+            <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+              <div className="bg-stone-800 p-4 text-white flex items-center gap-3">
+                <Waves className="w-5 h-5 text-amber-500" />
+                <h2 className="text-sm font-bold tracking-tight">數據對比 (Radar Chart)</h2>
               </div>
-            )}
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-50">
-              <h3 className="text-lg font-black text-stone-800 flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-amber-600" /> 指標分析
-              </h3>
-              <div className="text-right">
-                <Tooltip text="INS 值代表肥皂的軟硬程度，建議範圍在 120-170 之間。">
-                  <div className="flex flex-col items-end cursor-help group/ins">
-                    <p className="text-[10px] font-black text-stone-400 uppercase mb-1 flex items-center gap-1 group-hover/ins:text-amber-500 transition-colors">
-                      配方總 INS 值 <Info className="w-3 h-3" />
-                    </p>
-                    <div className="flex items-center justify-end gap-2">
-                      <NumberTicker
-                        value={results.avgIns}
-                        precision={1}
-                        className={`text-5xl font-black tabular-nums tracking-tighter ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}
-                      />
-                    </div>
-                  </div>
-                </Tooltip>
+              <div className="p-4 flex flex-col items-center bg-stone-50/30">
+                <RadarChart qualities={results.qualities} previewQualities={results.previewQualities} />
               </div>
             </div>
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 relative">
+              {hoveredOil && (
+                <div className={`absolute top-0 right-0 p-3 text-white text-[10px] font-black rounded-bl-2xl z-20 animate-pulse shadow-lg flex items-center gap-2 ${previewMode === 'reduction' ? 'bg-rose-500' : 'bg-amber-500'}`}>
+                  <Sparkles className="w-3 h-3" /> 數據預覽：{hoveredOil.name} {previewMode === 'reduction' ? '(調降)' : '(補位)'}
+                </div>
+              )}
+              <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-50">
+                <h3 className="text-lg font-black text-stone-800 flex items-center gap-2">
+                  <TrendingUp className="w-6 h-6 text-amber-600" /> 指標分析
+                </h3>
+                <div className="text-right">
+                  <Tooltip text="INS 值代表肥皂的軟硬程度，建議範圍在 120-170 之間。">
+                    <div className="flex flex-col items-end cursor-help group/ins">
+                      <p className="text-[10px] font-black text-stone-400 uppercase mb-1 flex items-center gap-1 group-hover/ins:text-amber-500 transition-colors">
+                        配方總 INS 值 <Info className="w-3 h-3" />
+                      </p>
+                      <div className="flex items-center justify-end gap-2">
+                        {results.avgIns > 0 && (
+                          <div className={`${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'} flex items-center gap-1`}>
+                            {results.avgIns < 120 ? <AlertCircle className="w-5 h-5" /> : results.avgIns > 170 ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                          </div>
+                        )}
+                        <NumberTicker
+                          value={results.avgIns}
+                          precision={1}
+                          className={`text-5xl font-black tabular-nums tracking-tighter ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}
+                        />
+                      </div>
+                    </div>
+                  </Tooltip>
+                </div>
+              </div>
 
-            <div className="space-y-8">
-              {(Object.keys(QUALITY_UI) as Array<keyof typeof QUALITY_UI>).map((key) => {
-                const ui = QUALITY_UI[key];
-                const range = QUALITY_RANGES[key];
-                const val = results.qualities[key];
-                const previewVal = results.previewQualities ? results.previewQualities[key] : null;
-                const status = getIndicatorStatus(val, range);
-                const statusUI = getStatusUI(status);
+              <div className="space-y-8">
+                {(Object.keys(QUALITY_UI) as Array<keyof typeof QUALITY_UI>).map((key) => {
+                  const ui = QUALITY_UI[key];
+                  const range = QUALITY_RANGES[key];
+                  const val = results.qualities[key];
+                  const previewVal = results.previewQualities ? results.previewQualities[key] : null;
+                  const status = getIndicatorStatus(val, range);
+                  const statusUI = getStatusUI(status);
 
-                return (
-                  <div key={key} className="space-y-3">
-                    <div className="flex items-end justify-between">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <Tooltip text={ui.label === '清潔' ? '去除油脂的能力' : ui.label === '保濕' ? '成皂後的滋潤程度' : ui.label === '硬度' ? '皂體的堅硬耐久度' : ui.label === '起泡' ? '產生大泡沫的能力' : '保護小泡沫不破裂的能力'}>
-                            <div className="flex items-center gap-2 cursor-help group/item">
-                              <span className={`p-1 rounded bg-stone-50 group-hover/item:bg-amber-50 transition-colors`}>
-                                <QualityIcon name={ui.icon} color={ui.color} size={14} />
-                              </span>
-                              <span className="text-sm font-black text-stone-700 group-hover/item:text-amber-600 transition-colors">{ui.label}</span>
-                            </div>
-                          </Tooltip>
+                  return (
+                    <div key={key} className="space-y-3">
+                      <div className="flex items-end justify-between">
+                        <div className="space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <Tooltip text={ui.label === '清潔' ? '去除油脂的能力' : ui.label === '保濕' ? '成皂後的滋潤程度' : ui.label === '硬度' ? '皂體的堅硬耐久度' : ui.label === '起泡' ? '產生大泡沫的能力' : '保護小泡沫不破裂的能力'}>
+                              <div className="flex items-center gap-2 cursor-help group/item">
+                                <span className={`p-1 rounded bg-stone-50 group-hover/item:bg-amber-50 transition-colors`}>
+                                  <QualityIcon name={ui.icon} color={ui.color} size={14} />
+                                </span>
+                                <span className="text-sm font-black text-stone-700 group-hover/item:text-amber-600 transition-colors">{ui.label}</span>
+                              </div>
+                            </Tooltip>
+                          </div>
+                          <p className="text-[10px] font-bold text-stone-400 ml-8">建議區間：{range.min} ~ {range.max}</p>
                         </div>
-                        <p className="text-[10px] font-bold text-stone-400 ml-8">建議區間：{range.min} ~ {range.max}</p>
+
+                        <div className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border flex items-center gap-1 ${statusUI.color.replace('text-', 'border-').replace('text-', 'bg-')}/5 ${statusUI.color} ${status !== 'ideal' && status !== 'none' ? 'animate-pulse' : ''}`}>
+                              {statusUI.icon}
+                              {statusUI.label}
+                            </span>
+                            <NumberTicker
+                              value={val}
+                              className={`text-2xl font-black tabular-nums ${statusUI.color}`}
+                            />
+                          </div>
+                          {previewVal !== null && previewVal !== val && (
+                            <div className={`text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
+                              預估變動: {previewVal > val ? '↑' : '↓'} {previewVal}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${statusUI.color.replace('text-', 'border-').replace('text-', 'bg-')}/5 ${statusUI.color}`}>
-                            {statusUI.label}
-                          </span>
-                          <NumberTicker
-                            value={val}
-                            className={`text-2xl font-black tabular-nums ${statusUI.color}`}
-                          />
-                        </div>
-                        {previewVal !== null && previewVal !== val && (
-                          <div className={`text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
-                            預估變動: {previewVal > val ? '↑' : '↓'} {previewVal}
-                          </div>
+                      <div className={`relative h-4 bg-stone-100 rounded-full overflow-hidden shadow-inner border transition-all duration-300 ${status === 'low' ? 'border-orange-200 ring-2 ring-orange-100' : status === 'high' ? 'border-red-200 ring-2 ring-red-100' : 'border-stone-200/50'}`}>
+                        <div
+                          className="absolute h-full bg-stone-200/50 border-x border-stone-300/30 z-0"
+                          style={{ left: `${range.min}%`, width: `${range.max - range.min}%` }}
+                        />
+                        <div
+                          className={`h-full ${statusUI.bg} shadow-sm transition-all duration-500 relative z-10`}
+                          style={{ width: `${Math.min(val, 100)}%` }}
+                        />
+                        {previewVal !== null && (
+                          <div className={`absolute top-0 h-full opacity-60 transition-all duration-200 z-0 animate-pulse ${previewVal > val ? 'bg-green-400' : 'bg-red-400'}`}
+                            style={{ left: `${Math.min(val, previewVal)}%`, width: `${Math.abs(previewVal - val)}%` }} />
                         )}
                       </div>
                     </div>
-
-                    <div className="relative h-4 bg-stone-100 rounded-full overflow-hidden shadow-inner border border-stone-200/50">
-                      <div
-                        className="absolute h-full bg-stone-200/50 border-x border-stone-300/30 z-0"
-                        style={{ left: `${range.min}%`, width: `${range.max - range.min}%` }}
-                      />
-                      <div
-                        className={`h-full ${statusUI.bg} transition-all duration-300 relative z-10 shadow-sm`}
-                        style={{ width: `${Math.min(val, 100)}%` }}
-                      />
-                      {previewVal !== null && (
-                        <div className={`absolute top-0 h-full opacity-60 transition-all duration-200 z-0 animate-pulse ${previewVal > val ? 'bg-green-400' : 'bg-red-400'}`}
-                          style={{ left: `${Math.min(val, previewVal)}%`, width: `${Math.abs(previewVal - val)}%` }} />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="bg-stone-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
-            <div className="absolute -right-10 -top-10 opacity-5">
-              <ZapIcon className="w-40 h-40" />
-            </div>
-            <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-amber-400 relative z-10">
-              <Lightbulb className="w-6 h-6" /> 配方專家建議
-            </h3>
-            {results.suggestions.length > 0 ? (
-              <div className="space-y-4 relative z-10">
-                {results.suggestions.map((s, i) => (
-                  <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                    <p className={`text-sm font-black mb-3 ${s.text.includes('過高') || s.text.includes('太強') ? 'text-rose-400' : 'text-orange-400'}`}>{s.text}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {s.actions.map((action, idx) => {
-                        const oilObj = OILS.find(o => o.name.includes(action.name));
-                        const isReduce = action.type === 'reduce';
-                        return (
-                          <button
-                            key={idx}
-                            onMouseEnter={() => {
-                              if (oilObj) {
-                                setHoveredOil(oilObj);
-                                setPreviewMode(isReduce ? 'reduction' : 'addition');
-                                setPreviewWeightChange(action.weight);
-                              }
-                            }}
-                            onMouseLeave={() => { setHoveredOil(null); setPreviewMode(null); }}
-                            onClick={() => applyAdjustment(action.name, action.weight, action.type)}
-                            className={`flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-xl font-bold transition-all group shadow-sm border border-transparent ${isReduce
-                              ? 'bg-rose-500/10 text-rose-300 hover:bg-rose-600 hover:text-white hover:border-rose-400'
-                              : 'bg-white/10 text-stone-300 hover:bg-amber-600 hover:text-white hover:border-amber-400'
-                              }`}
-                          >
-                            {isReduce ? (
-                              <MinusCircle className="w-3.5 h-3.5 text-rose-500 group-hover:text-white" />
-                            ) : (
-                              <PlusCircle className="w-3.5 h-3.5 text-amber-500 group-hover:text-white" />
-                            )}
-                            <span>{isReduce ? '建議調降' : '建議補位'}：{action.name} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-            ) : (
-              <div className="flex items-center gap-4 py-6 bg-green-500/10 rounded-2xl border border-green-500/20 p-4 text-green-400 relative z-10">
-                <CheckCircle2 className="w-8 h-8" />
-                <div>
-                  <span className="text-lg font-black leading-none">數據平衡！</span>
-                  <p className="text-[10px] opacity-60">配方指標符合專家推薦範圍。</p>
+            </div>
+
+            <div className="bg-stone-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
+              <div className="absolute -right-10 -top-10 opacity-5">
+                <ZapIcon className="w-40 h-40" />
+              </div>
+              <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-amber-400 relative z-10">
+                <Lightbulb className="w-6 h-6" /> 配方專家建議
+              </h3>
+              {results.suggestions.length > 0 ? (
+                <div className="space-y-4 relative z-10">
+                  {results.suggestions.map((s, i) => (
+                    <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                      <p className={`text-sm font-black mb-3 ${s.text.includes('過高') || s.text.includes('太強') ? 'text-rose-400' : 'text-orange-400'}`}>{s.text}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {s.actions.map((action, idx) => {
+                          const oilObj = OILS.find(o => o.name.includes(action.name));
+                          const isReduce = action.type === 'reduce';
+                          return (
+                            <button
+                              key={idx}
+                              onMouseEnter={() => {
+                                if (oilObj) {
+                                  setHoveredOil(oilObj);
+                                  setPreviewMode(isReduce ? 'reduction' : 'addition');
+                                  setPreviewWeightChange(action.weight);
+                                }
+                              }}
+                              onMouseLeave={() => { setHoveredOil(null); setPreviewMode(null); }}
+                              onClick={() => applyAdjustment(action.name, action.weight, action.type)}
+                              className={`flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-xl font-bold transition-all group shadow-sm border border-transparent ${isReduce
+                                ? 'bg-rose-500/10 text-rose-300 hover:bg-rose-600 hover:text-white hover:border-rose-400'
+                                : 'bg-white/10 text-stone-300 hover:bg-amber-600 hover:text-white hover:border-amber-400'
+                                }`}
+                            >
+                              {isReduce ? (
+                                <MinusCircle className="w-3.5 h-3.5 text-rose-500 group-hover:text-white" />
+                              ) : (
+                                <PlusCircle className="w-3.5 h-3.5 text-amber-500 group-hover:text-white" />
+                              )}
+                              <span>{isReduce ? '建議調降' : '建議補位'}：{action.name} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center gap-4 py-6 bg-green-500/10 rounded-2xl border border-green-500/20 p-4 text-green-400 relative z-10">
+                  <CheckCircle2 className="w-8 h-8" />
+                  <div>
+                    <span className="text-lg font-black leading-none">數據平衡！</span>
+                    <p className="text-[10px] opacity-60">配方指標符合專家推薦範圍。</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-        <div className="bg-stone-800 p-5 text-white flex items-center gap-3">
-          <h2 className="text-xl font-bold tracking-tight">4. 五力分布與數據對比</h2>
-        </div>
-        <div className="p-10 flex flex-col items-center">
-          <RadarChart qualities={results.qualities} previewQualities={results.previewQualities} />
         </div>
       </div>
     </div>
