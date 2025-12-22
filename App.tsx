@@ -28,18 +28,29 @@ import {
 } from 'lucide-react';
 
 const STORAGE_KEY_PRICES = 'soap_master_oil_prices';
+const STORAGE_KEY_FORMULA = 'soap_master_formula';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof OilData | 'none'>('none');
   
-  // 提升配方狀態
-  const [formulaItems, setFormulaItems] = useState<FormulaItem[]>([
-    { oilId: 'coconut', weight: 150 },
-    { oilId: 'palm', weight: 100 },
-    { oilId: 'olive', weight: 250 },
-  ]);
+  // 提升配方狀態 - 從 localStorage 恢復
+  const [formulaItems, setFormulaItems] = useState<FormulaItem[]>(() => {
+    const savedFormula = localStorage.getItem(STORAGE_KEY_FORMULA);
+    if (savedFormula) {
+      try {
+        return JSON.parse(savedFormula);
+      } catch (e) {
+        console.error("Failed to parse saved formula", e);
+      }
+    }
+    return [
+      { oilId: 'coconut', weight: 150 },
+      { oilId: 'palm', weight: 100 },
+      { oilId: 'olive', weight: 250 },
+    ];
+  });
 
   // 管理自訂價格狀態 - 初始值嘗試從 localStorage 讀取
   const [oilPrices, setOilPrices] = useState<Record<string, number>>(() => {
@@ -59,6 +70,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
   }, [oilPrices]);
+
+  // 當配方改變時，同步到 localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_FORMULA, JSON.stringify(formulaItems));
+  }, [formulaItems]);
 
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
@@ -120,7 +136,7 @@ const App: React.FC = () => {
                   <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`whitespace-nowrap text-xs md:text-sm font-bold tracking-widest transition-all px-3 py-2 rounded-full border ${
+                    className={`whitespace-nowrap text-xs md:text-sm font-bold tracking-widest transition-all px-3 py-2 rounded-full border active:scale-95 ${
                       activeTab === tab.id 
                       ? 'text-amber-700 bg-amber-50 border-amber-200 shadow-sm' 
                       : 'text-stone-400 bg-transparent border-transparent hover:text-stone-600 hover:bg-stone-50'
