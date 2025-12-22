@@ -20,11 +20,10 @@ import {
   Waves,
   ArrowDownCircle,
   ArrowUpCircle,
-  Dna,
   Check,
   ZapIcon,
-  Target,
-  Circle
+  Circle,
+  Activity
 } from 'lucide-react';
 
 // 將 Lucide 圖標對應到 QUALITY_UI
@@ -104,32 +103,25 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
           );
         })}
 
-        {/* 理想區間背景 */}
         <polygon points={idealMaxPath} className="fill-stone-200/40" />
         <polygon points={idealMinPath} className="fill-white" />
         <polygon points={idealMaxPath} className="fill-none stroke-stone-300 stroke-dashed" strokeWidth="1" strokeDasharray="4,4" />
         
-        {/* 預覽路徑 */}
         {previewPath && (
           <polygon points={previewPath} className="fill-amber-400/20 stroke-amber-400/40 stroke-2 stroke-dashed animate-pulse" />
         )}
 
-        {/* 實際路徑 */}
         <polygon points={dataPath} className="fill-amber-600/15 stroke-amber-600 shadow-xl" strokeWidth="3" strokeLinejoin="round" />
         
-        {/* 頂點數據點與圖籤 */}
         {points.map((p, i) => {
           const val = qualities[p.key as keyof OilQualities];
           const coords = getCoordinates(val, i);
-          const labelCoords = getCoordinates(135, i); // 標籤與圖示位置
+          const labelCoords = getCoordinates(135, i);
           const ui = QUALITY_UI[p.key as keyof typeof QUALITY_UI];
 
           return (
             <g key={i}>
-              {/* 數據圓圈 */}
               <circle cx={coords.x} cy={coords.y} r="4.5" fill={ui.color} className="stroke-white stroke-2 shadow-sm" />
-              
-              {/* 圖示與標籤 */}
               <g transform={`translate(${labelCoords.x - 15}, ${labelCoords.y - 15})`}>
                 <QualityIcon name={ui.icon} size={14} color={ui.color} />
                 <text x="18" y="11" className="text-[12px] font-black" fill={ui.color} dominantBaseline="middle">
@@ -141,7 +133,6 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
         })}
       </svg>
       
-      {/* 圖例說明 */}
       <div className="flex gap-4 mt-4 bg-stone-50 px-4 py-2 rounded-full border border-stone-100">
         <div className="flex items-center gap-1.5">
            <div className="w-2.5 h-2.5 bg-amber-600 rounded-full" />
@@ -149,9 +140,33 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
         </div>
         <div className="flex items-center gap-1.5">
            <div className="w-2.5 h-2.5 bg-stone-200 border border-stone-300 border-dashed rounded-full" />
-           <span className="text-[10px] font-black text-stone-500">理想區間</span>
+           <span className="text-[10px] font-black text-stone-500">理想範圍</span>
         </div>
       </div>
+    </div>
+  );
+};
+
+// 微型五力分布圖表
+const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
+  const qualities = [
+    { key: 'hardness', ...QUALITY_UI.hardness, val: oil.hardness },
+    { key: 'cleansing', ...QUALITY_UI.cleansing, val: oil.cleansing },
+    { key: 'conditioning', ...QUALITY_UI.conditioning, val: oil.conditioning },
+    { key: 'bubbly', ...QUALITY_UI.bubbly, val: oil.bubbly },
+    { key: 'creamy', ...QUALITY_UI.creamy, val: oil.creamy },
+  ];
+
+  return (
+    <div className="flex gap-0.5 mt-1.5 h-1 w-24 bg-stone-100 rounded-full overflow-hidden">
+      {qualities.map(q => (
+        <div 
+          key={q.key} 
+          className={q.bg} 
+          style={{ width: `${q.val / 5}%`, minWidth: '2px' }}
+          title={`${q.label}: ${q.val}`}
+        />
+      ))}
     </div>
   );
 };
@@ -178,18 +193,18 @@ const CustomOilSelect: React.FC<{
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onHover]);
 
-  const getSmartTags = (oil: OilData) => {
+  const getOilTags = (oil: OilData) => {
     const qualities = [
-      { key: 'hardness', label: '硬度', val: oil.hardness },
-      { key: 'cleansing', label: '清潔', val: oil.cleansing },
-      { key: 'conditioning', label: '保濕', val: oil.conditioning },
-      { key: 'bubbly', label: '起泡', val: oil.bubbly },
-      { key: 'creamy', label: '穩定', val: oil.creamy },
+      { key: 'hardness', ...QUALITY_UI.hardness, val: oil.hardness },
+      { key: 'cleansing', ...QUALITY_UI.cleansing, val: oil.cleansing },
+      { key: 'conditioning', ...QUALITY_UI.conditioning, val: oil.conditioning },
+      { key: 'bubbly', ...QUALITY_UI.bubbly, val: oil.bubbly },
+      { key: 'creamy', ...QUALITY_UI.creamy, val: oil.creamy },
     ];
-    // 找出最強的兩項
-    const topTags = qualities.sort((a, b) => b.val - a.val).slice(0, 2).map(q => q.label);
-    // 是否能補位當前缺少的指標 (大於 40 分即視為強項)
-    const isRecommended = lackingKeys.some(key => oil[key as keyof OilQualities] >= 40);
+    // 找出數值最大的前兩名
+    const topTags = qualities.sort((a, b) => b.val - a.val).slice(0, 2);
+    // 判斷是否推薦補位
+    const isRecommended = lackingKeys.some(key => oil[key as keyof OilQualities] >= 45);
     return { topTags, isRecommended };
   };
 
@@ -199,19 +214,25 @@ const CustomOilSelect: React.FC<{
         onClick={() => setIsOpen(!isOpen)}
         className="w-full p-3.5 bg-white border border-stone-200 rounded-xl flex items-center justify-between outline-none focus:ring-4 focus:ring-amber-500/20 text-stone-700 font-bold transition-all"
       >
-        <span className="truncate flex items-center gap-2">
+        <div className="truncate flex items-center gap-2">
           {selectedOil?.name}
-          <span className="text-stone-300 font-normal text-xs truncate">
-            ({getSmartTags(selectedOil!).topTags.join('、')})
-          </span>
-        </span>
+          {selectedOil && (
+            <div className="hidden sm:flex gap-1 ml-1">
+               {getOilTags(selectedOil).topTags.map(tag => (
+                 <span key={tag.key} className="text-[9px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 font-black">
+                   {tag.label}
+                 </span>
+               ))}
+            </div>
+          )}
+        </div>
         <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full max-h-[300px] bg-white border border-stone-100 rounded-2xl shadow-2xl overflow-y-auto no-scrollbar animate-fade-in">
+        <div className="absolute z-50 mt-2 w-full max-h-[350px] bg-white border border-stone-100 rounded-2xl shadow-2xl overflow-y-auto no-scrollbar animate-fade-in">
           {OILS.map((oil) => {
-            const { topTags, isRecommended } = getSmartTags(oil);
+            const { topTags, isRecommended } = getOilTags(oil);
             return (
               <div
                 key={oil.id}
@@ -224,12 +245,12 @@ const CustomOilSelect: React.FC<{
                 }}
                 className={`flex items-center justify-between p-4 cursor-pointer transition-all border-b border-stone-50 last:border-none ${
                   value === oil.id ? 'bg-amber-50' : 'hover:bg-stone-50'
-                } ${isRecommended ? 'bg-amber-50/30' : ''}`}
+                } ${isRecommended ? 'bg-amber-50/20' : ''}`}
               >
-                <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                <div className="flex flex-col gap-1 min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     {isRecommended && (
-                      <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm flex items-center gap-1 shadow-sm">
+                      <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm flex items-center gap-1 shadow-sm animate-pulse">
                         ✨ 推薦補位
                       </span>
                     )}
@@ -237,11 +258,19 @@ const CustomOilSelect: React.FC<{
                       {oil.name}
                     </span>
                   </div>
-                  <div className="text-[10px] font-medium text-stone-400 flex items-center gap-1">
-                    強項：<span className="text-stone-500 font-bold">{topTags.join('、')}</span>
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      {topTags.map(tag => (
+                        <span key={tag.key} className={`text-[9px] font-black px-1.5 py-0.5 rounded text-white ${tag.bg}`}>
+                          {tag.label}
+                        </span>
+                      ))}
+                    </div>
+                    <MiniQualityBars oil={oil} />
                   </div>
                 </div>
-                <div className="text-[10px] font-black text-stone-300 ml-4">INS {oil.ins}</div>
+                <div className="text-[10px] font-black text-stone-300 ml-4 whitespace-nowrap">INS {oil.ins}</div>
               </div>
             );
           })}
@@ -260,7 +289,6 @@ interface CalculatorProps {
 export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindOil }) => {
   const [waterRatio, setWaterRatio] = useState<number>(2.3);
   
-  // 影子預覽狀態
   const [hoveredOil, setHoveredOil] = useState<OilData | null>(null);
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
   const [hoveringSlotIndex, setHoveringSlotIndex] = useState<number | null>(null);
@@ -300,11 +328,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
     };
 
     const current = calculate(items);
-    
-    // 動態計算建議重量 (約 10% 總重)
     const baseSuggestWeight = Math.max(50, Math.round(current.totalWeight * 0.1));
 
-    // 計算預覽結果
     let preview = null;
     if (hoveredOil) {
       const previewItems = [...items];
@@ -366,12 +391,12 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       }
     }
 
-    let personality = "調整中";
+    let personality = "計算中";
     if (current.totalWeight > 0) {
       if (current.qualities.conditioning > 60) personality = "溫和滋潤型";
       else if (current.qualities.cleansing > 18) personality = "強效清爽型";
       else if (current.qualities.hardness > 45) personality = "極硬耐用型";
-      else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "經典平衡型";
+      else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "配方平衡型";
     }
 
     return {
@@ -388,7 +413,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
     };
   }, [items, waterRatio, hoveredOil, previewMode, hoveringSlotIndex, previewWeightChange]);
 
-  const smartAdjustFormula = (oilName: string, weightChange: number, type: 'add' | 'reduce') => {
+  const applyAdjustment = (oilName: string, weightChange: number, type: 'add' | 'reduce') => {
     const oil = OILS.find(o => o.name.includes(oilName));
     if (oil) {
       const actualChange = type === 'reduce' ? -weightChange : weightChange;
@@ -450,8 +475,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
           </div>
           {results.totalWeight > 0 && (
             <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
-               <Dna className="w-3.5 h-3.5 text-amber-400" />
-               <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">性格：{results.personality}</span>
+               <Activity className="w-3.5 h-3.5 text-amber-400" />
+               <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">配方特性：{results.personality}</span>
             </div>
           )}
         </div>
@@ -501,7 +526,6 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        {/* 2. 稱重清單 */}
         <div className="xl:col-span-7 bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
           <div className="bg-amber-600 p-6 text-white flex items-center gap-3">
             <Scale className="w-6 h-6" />
@@ -538,12 +562,11 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
           </div>
         </div>
 
-        {/* 3. 指標分析 */}
         <div className="xl:col-span-5 flex flex-col gap-6">
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 relative overflow-hidden">
             {hoveredOil && (
               <div className={`absolute top-0 right-0 p-3 text-white text-[10px] font-black rounded-bl-2xl z-20 animate-pulse shadow-lg flex items-center gap-2 ${previewMode === 'reduction' ? 'bg-rose-500' : 'bg-amber-500'}`}>
-                <Sparkles className="w-3 h-3" /> 預覽效果：{hoveredOil.name} {previewMode === 'reduction' ? '(調降)' : '(補位)'}
+                <Sparkles className="w-3 h-3" /> 數據預覽：{hoveredOil.name} {previewMode === 'reduction' ? '(調降)' : '(補位)'}
               </div>
             )}
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-50">
@@ -593,7 +616,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
                         </div>
                         {previewVal !== null && previewVal !== val && (
                           <div className={`text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
-                            預覽變動: {previewVal > val ? '↑' : '↓'} {previewVal}
+                            預估變動: {previewVal > val ? '↑' : '↓'} {previewVal}
                           </div>
                         )}
                       </div>
@@ -619,13 +642,12 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
             </div>
           </div>
 
-          {/* 4. 健檢區塊 */}
           <div className="bg-stone-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
              <div className="absolute -right-10 -top-10 opacity-5">
                <ZapIcon className="w-40 h-40" />
              </div>
             <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-amber-400 relative z-10">
-              <Lightbulb className="w-6 h-6 animate-bounce" /> 智慧配方健檢
+              <Lightbulb className="w-6 h-6" /> 配方專家建議
             </h3>
             {results.suggestions.length > 0 ? (
               <div className="space-y-4 relative z-10">
@@ -647,7 +669,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
                               } 
                             }}
                             onMouseLeave={() => { setHoveredOil(null); setPreviewMode(null); }}
-                            onClick={() => smartAdjustFormula(action.name, action.weight, action.type)}
+                            onClick={() => applyAdjustment(action.name, action.weight, action.type)}
                             className={`flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-xl font-bold transition-all group shadow-sm border border-transparent ${
                               isReduce 
                               ? 'bg-rose-500/10 text-rose-300 hover:bg-rose-600 hover:text-white hover:border-rose-400' 
@@ -659,7 +681,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
                             ) : (
                               <PlusCircle className="w-3.5 h-3.5 text-amber-500 group-hover:text-white" />
                             )}
-                            <span>{isReduce ? '智慧調降' : '智慧補位'}：{action.name} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
+                            <span>{isReduce ? '建議調降' : '建議補位'}：{action.name} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
                           </button>
                         );
                       })}
@@ -671,8 +693,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
               <div className="flex items-center gap-4 py-6 bg-green-500/10 rounded-2xl border border-green-500/20 p-4 text-green-400 relative z-10">
                 <CheckCircle2 className="w-8 h-8" />
                 <div>
-                  <span className="text-lg font-black leading-none">極品配方！</span>
-                  <p className="text-[10px] opacity-60">數據非常平衡，這將會是一塊頂級的手工皂。</p>
+                  <span className="text-lg font-black leading-none">數據平衡！</span>
+                  <p className="text-[10px] opacity-60">配方指標符合專家推薦範圍。</p>
                 </div>
               </div>
             )}
@@ -680,10 +702,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
         </div>
       </div>
 
-      {/* 5. 雷達圖分布 */}
       <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
         <div className="bg-stone-800 p-5 text-white flex items-center gap-3">
-          <h2 className="text-xl font-bold tracking-tight">3. 五力分布與標準對比</h2>
+          <h2 className="text-xl font-bold tracking-tight">3. 五力分布與數據對比</h2>
         </div>
         <div className="p-10 flex flex-col items-center">
           <RadarChart qualities={results.qualities} previewQualities={results.previewQualities} />
