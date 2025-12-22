@@ -1,37 +1,98 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>手工皂製作大師</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Noto Sans TC', sans-serif;
-        background-color: #fcfaf7;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        color: #44403c;
-      }
-      
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>手工皂製作大師</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+    rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: var(--color-bg, #fcfaf7);
+      transition: background-color 0.5s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      color: #44403c;
+    }
+
+    :root {
+      --color-primary: #d97706;
+      /* amber-600 */
+      --color-primary-light: #fef3c7;
+      /* amber-100 */
+      --color-bg: #fcfaf7;
+    }
+
+    .theme-natural {
+      --color-primary: #166534;
+      /* green-800 matcha */
+      --color-primary-light: #f0fdf4;
+      /* green-50 */
+      --color-bg: #f5f5f0;
+      /* oatmeal */
+    }
+
+    .theme-minimal {
+      --color-primary: #1c1917;
+      /* stone-900 */
+      --color-primary-light: #f5f5f4;
+      /* stone-100 */
+      --color-bg: #ffffff;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
       }
 
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
-      .animate-fade-in {
-        animation: fadeIn 0.4s ease-out forwards;
-      }
-    </style>
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .theme-text-primary {
+      color: var(--color-primary) !important;
+    }
+
+    .theme-bg-primary {
+      background-color: var(--color-primary) !important;
+    }
+
+    .theme-bg-light {
+      background-color: var(--color-primary-light) !important;
+    }
+
+    .theme-border-primary {
+      border-color: var(--color-primary) !important;
+    }
+
+    .theme-icon {
+      background-color: var(--color-primary-light) !important;
+      color: var(--color-primary) !important;
+    }
+
+    .soap-texture {
+      background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -43,8 +104,10 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

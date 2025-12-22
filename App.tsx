@@ -24,17 +24,35 @@ import {
   ShieldCheck,
   Zap,
   Waves,
-  DollarSign
+  DollarSign,
+  FileText,
+  Palette,
+  Leaf,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 const STORAGE_KEY_PRICES = 'soap_master_oil_prices';
 const STORAGE_KEY_FORMULA = 'soap_master_formula';
 const STORAGE_KEY_SAVED_RECIPES = 'soap_master_saved_recipes';
+const STORAGE_KEY_THEME = 'soap_master_theme';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof OilData | 'none'>('none');
+  const [theme, setTheme] = useState<'classic' | 'natural' | 'minimal'>(() => {
+    return (localStorage.getItem(STORAGE_KEY_THEME) as any) || 'classic';
+  });
+
+  // 當主題改變時，同步到 localStorage 並更新 body class
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_THEME, theme);
+    const body = document.body;
+    body.classList.remove('theme-natural', 'theme-minimal');
+    if (theme === 'natural') body.classList.add('theme-natural');
+    else if (theme === 'minimal') body.classList.add('theme-minimal');
+  }, [theme]);
 
   // 提升配方狀態 - 從 localStorage 恢復
   const [formulaItems, setFormulaItems] = useState<FormulaItem[]>(() => {
@@ -152,13 +170,40 @@ const App: React.FC = () => {
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between py-3 md:py-4 gap-4">
-            <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={() => setActiveTab(SectionType.CALCULATOR)}>
-              <div className="bg-amber-100 p-1.5 md:p-2 rounded-lg md:rounded-xl">
-                <Droplets className="w-6 h-6 md:w-8 md:h-8 text-amber-700" />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 md:gap-3 cursor-pointer" onClick={() => setActiveTab(SectionType.CALCULATOR)}>
+                <div className="bg-amber-100 p-1.5 md:p-2 rounded-lg md:rounded-xl theme-icon">
+                  <Droplets className="w-6 h-6 md:w-8 md:h-8 text-amber-700 theme-text-primary" />
+                </div>
+                <h1 className="text-lg md:text-2xl font-black text-stone-800 tracking-tight">
+                  手工皂<span className="text-amber-600 theme-text-primary">製作大師</span>
+                </h1>
               </div>
-              <h1 className="text-lg md:text-2xl font-black text-stone-800 tracking-tight">
-                手工皂<span className="text-amber-600">製作大師</span>
-              </h1>
+
+              {/* 主題切換按鈕 */}
+              <div className="hidden sm:flex bg-stone-100 p-1 rounded-xl border border-stone-200 ml-4">
+                <button
+                  onClick={() => setTheme('classic')}
+                  className={`p-2 rounded-lg transition-all ${theme === 'classic' ? 'bg-white shadow-sm text-amber-600' : 'text-stone-400 hover:text-stone-600'}`}
+                  title="經典橘"
+                >
+                  <Palette className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setTheme('natural')}
+                  className={`p-2 rounded-lg transition-all ${theme === 'natural' ? 'bg-green-100 shadow-sm text-green-700' : 'text-stone-400 hover:text-stone-600'}`}
+                  title="自然綠"
+                >
+                  <Leaf className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setTheme('minimal')}
+                  className={`p-2 rounded-lg transition-all ${theme === 'minimal' ? 'bg-stone-800 shadow-sm text-white' : 'text-stone-400 hover:text-stone-600'}`}
+                  title="極簡黑"
+                >
+                  <Sun className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <nav className="flex w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
@@ -166,7 +211,7 @@ const App: React.FC = () => {
                 {[
                   { id: SectionType.CALCULATOR, label: '配方計算' },
                   { id: SectionType.PRE_PRODUCTION, label: '油脂百科' },
-                  { id: SectionType.PRODUCTION, label: '製作關鍵' },
+                  { id: SectionType.PRODUCTION, label: '生產指南' },
                   { id: SectionType.POST_PRODUCTION, label: '脫模晾皂' },
                   { id: SectionType.FAQ, label: '問題排除' },
                 ].map((tab) => (
@@ -174,8 +219,8 @@ const App: React.FC = () => {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`whitespace-nowrap text-xs md:text-sm font-bold tracking-widest transition-all px-3 py-2 rounded-full border active:scale-95 ${activeTab === tab.id
-                        ? 'text-amber-700 bg-amber-50 border-amber-200 shadow-sm'
-                        : 'text-stone-400 bg-transparent border-transparent hover:text-stone-600 hover:bg-stone-50'
+                      ? 'theme-text-primary theme-bg-light theme-border-primary shadow-sm'
+                      : 'text-stone-400 bg-transparent border-transparent hover:text-stone-600 hover:bg-stone-50'
                       }`}
                   >
                     {tab.label}
@@ -267,15 +312,15 @@ const App: React.FC = () => {
                       <div
                         key={oil.id}
                         className={`bg-white border p-6 rounded-3xl transition-all group relative ${sortBy !== 'none' && index < 3
-                            ? 'border-amber-200 shadow-md ring-1 ring-amber-100'
-                            : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
+                          ? 'border-amber-200 shadow-md ring-1 ring-amber-100'
+                          : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
                           }`}
                       >
                         {sortBy !== 'none' && index < 3 && (
                           <div className="absolute -top-3 -left-3 flex items-center justify-center">
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 ${index === 0 ? 'bg-yellow-400 border-yellow-200 text-yellow-900' :
-                                index === 1 ? 'bg-stone-300 border-stone-100 text-stone-700' :
-                                  'bg-amber-600 border-amber-400 text-white'
+                              index === 1 ? 'bg-stone-300 border-stone-100 text-stone-700' :
+                                'bg-amber-600 border-amber-400 text-white'
                               }`}>
                               <Trophy className="w-5 h-5" />
                             </div>
@@ -319,19 +364,51 @@ const App: React.FC = () => {
             )}
 
             {activeTab === SectionType.PRODUCTION && (
-              <div className="bg-amber-50 p-6 md:p-10 rounded-2xl md:rounded-3xl border border-amber-100 animate-fade-in">
-                <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-6 md:mb-8 flex items-center gap-3">
-                  <FlaskConical className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 製作過程關鍵
-                </h2>
-                <div className="space-y-8">
-                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
-                    <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
-                      <ThermometerSun className="text-orange-500" /> 溫度控制 (Temperature)
-                    </h3>
-                    <div className="inline-flex items-center justify-center px-6 py-4 bg-orange-50 border-2 border-orange-100 rounded-2xl font-black text-3xl text-orange-700 shadow-inner">
-                      40℃ ~ 45℃
+              <div className="space-y-8 animate-fade-in">
+                <div className="bg-amber-50 p-6 md:p-10 rounded-2xl md:rounded-3xl border border-amber-100">
+                  <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-6 md:mb-8 flex items-center gap-3">
+                    <FlaskConical className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 生產指南 (Production Guide)
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                      <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
+                        <ThermometerSun className="text-orange-500" /> 溫度控制 (Temperature)
+                      </h3>
+                      <div className="inline-flex items-center justify-center px-6 py-4 bg-orange-50 border-2 border-orange-100 rounded-2xl font-black text-3xl text-orange-700 shadow-inner">
+                        40℃ ~ 45℃
+                      </div>
+                      <p className="mt-4 text-sm text-stone-500 leading-relaxed">這是油鹼混合的最佳溫度區間，有助於反應順暢且不易產生皂粉。</p>
+                    </div>
+
+                    <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100">
+                      <h3 className="text-lg font-bold text-rose-800 mb-4 flex items-center gap-2">
+                        <Shield className="text-rose-600" /> 安全防護 (Safety)
+                      </h3>
+                      <ul className="space-y-2 text-sm text-rose-700 font-bold">
+                        <li className="flex items-center gap-2">✅ 佩戴耐強鹼手套</li>
+                        <li className="flex items-center gap-2">✅ 全程戴上護目鏡</li>
+                        <li className="flex items-center gap-2">✅ 穿著長袖衣物</li>
+                        <li className="flex items-center gap-2">✅ 保持環境通風</li>
+                      </ul>
                     </div>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  {[
+                    { title: "1. 溶鹼 (Lye Solution)", desc: "將氫氧化鈉加入水中（切記：不可將水加入氫氧化鈉！），攪拌至完全透明並等待降溫。" },
+                    { title: "2. 融油 (Oils)", desc: "將固態油脂加熱溶解，並與液態油混合均勻，調整溫度至與鹼水相近。" },
+                    { title: "3. 混合 (Mixing)", desc: "緩緩將鹼水倒入油脂中，手動或使用攪拌棒持續攪拌至呈現濃稠狀 (Trace)。" },
+                    { title: "4. 入模 (Molding)", desc: "加入精油或添加物後攪拌均勻，倒入模具並輕敲排出氣泡。" }
+                  ].map((step, i) => (
+                    <div key={i} className="flex gap-4 p-6 bg-white rounded-2xl border border-stone-100 shadow-sm">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center font-black">{i + 1}</div>
+                      <div>
+                        <h4 className="font-black text-stone-800 mb-1">{step.title}</h4>
+                        <p className="text-sm text-stone-500 leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -409,9 +486,44 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="max-w-7xl mx-auto border-t border-stone-100 py-12 px-6 text-center mt-12 opacity-60">
+      <footer className="max-w-7xl mx-auto border-t border-stone-100 py-12 px-6 text-center mt-12 opacity-60 pb-32 md:pb-12">
         <p className="text-stone-400 text-xs italic">本站僅供教學與輔助計算參考。進行化學反應時，請務必佩戴防護裝備。</p>
       </footer>
+
+      {/* 行動裝置底部導航 */}
+      <div className="fixed bottom-0 left-0 right-0 z-[100] md:hidden bg-white/90 backdrop-blur-lg border-t border-stone-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-4 pb-safe">
+        <div className="flex items-center justify-around h-20">
+          <button
+            onClick={() => setActiveTab(SectionType.CALCULATOR)}
+            className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === SectionType.CALCULATOR ? 'text-amber-600 scale-110' : 'text-stone-400'}`}
+          >
+            <div className={`p-2 rounded-2xl transition-all ${activeTab === SectionType.CALCULATOR ? 'bg-amber-100' : 'bg-transparent'}`}>
+              <FlaskConical className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-black tracking-tighter uppercase">計算</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(SectionType.PRODUCTION)}
+            className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === SectionType.PRODUCTION ? 'text-blue-600 scale-110' : 'text-stone-400'}`}
+          >
+            <div className={`p-2 rounded-2xl transition-all ${activeTab === SectionType.PRODUCTION ? 'bg-blue-100' : 'bg-transparent'}`}>
+              <FileText className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-black tracking-tighter uppercase">生產指南</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab(SectionType.FAQ)}
+            className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === SectionType.FAQ ? 'text-rose-600 scale-110' : 'text-stone-400'}`}
+          >
+            <div className={`p-2 rounded-2xl transition-all ${activeTab === SectionType.FAQ ? 'bg-rose-100' : 'bg-transparent'}`}>
+              <HelpCircle className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-black tracking-tighter uppercase">QA</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
