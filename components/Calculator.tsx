@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { OILS, QUALITY_RANGES, QUALITY_UI } from '../constants';
-import { FormulaItem, OilQualities, OilData } from '../types';
+import { FormulaItem, OilQualities, OilData, SavedFormula } from '../types';
 import {
   Calculator as CalcIcon,
   Trash2,
@@ -26,7 +26,13 @@ import {
   Activity,
   DollarSign,
   Tag,
-  Coins
+  Coins,
+  Bookmark,
+  History,
+  Save,
+  FolderOpen,
+  X,
+  FileText
 } from 'lucide-react';
 
 // 將 Lucide 圖標對應到 QUALITY_UI
@@ -320,11 +326,28 @@ interface CalculatorProps {
   oilPrices: Record<string, number>;
   onSetPrice: (id: string, price: number) => void;
   onFindOil: (quality: string) => void;
+  savedRecipes: SavedFormula[];
+  onSaveRecipe: (name: string) => void;
+  onLoadRecipe: (recipe: SavedFormula) => void;
+  onDeleteRecipe: (id: string) => void;
 }
 
-export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, oilPrices, onSetPrice, onFindOil }) => {
+export const Calculator: React.FC<CalculatorProps> = ({
+  items,
+  setItems,
+  oilPrices,
+  onSetPrice,
+  onFindOil,
+  savedRecipes,
+  onSaveRecipe,
+  onLoadRecipe,
+  onDeleteRecipe
+}) => {
   const [waterRatio, setWaterRatio] = useState<number>(2.3);
   const [showCost, setShowCost] = useState(false);
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [recipeName, setRecipeName] = useState('');
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const [hoveredOil, setHoveredOil] = useState<OilData | null>(null);
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
@@ -517,6 +540,14 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, oilPric
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowLibrary(!showLibrary)}
+              className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showLibrary ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
+                }`}
+            >
+              <FolderOpen className="w-3 h-3" />
+              配方庫 ({savedRecipes.length})
+            </button>
+            <button
               onClick={() => setShowCost(!showCost)}
               className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showCost ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
                 }`}
@@ -609,11 +640,116 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, oilPric
               );
             })}
           </div>
-          <button onClick={addItem} className="w-full py-5 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 font-black hover:bg-stone-50 hover:border-amber-200 hover:text-amber-600 transition-all flex items-center justify-center gap-2 mt-4 uppercase tracking-widest active:scale-[0.98]">
-            <PlusCircle className="w-5 h-5" /> 新增油脂材料
-          </button>
+          <div className="flex gap-3 mt-4">
+            <button onClick={addItem} className="flex-1 py-5 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 font-black hover:bg-stone-50 hover:border-amber-200 hover:text-amber-600 transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98]">
+              <PlusCircle className="w-5 h-5" /> 新增油脂材料
+            </button>
+            <button
+              onClick={() => setShowSaveModal(true)}
+              className="px-8 py-5 bg-stone-800 text-white rounded-2xl font-black hover:bg-stone-900 transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              disabled={items.length === 0 || results.totalWeight === 0}
+            >
+              <Save className="w-5 h-5 text-amber-500" /> 儲存目前配方
+            </button>
+          </div>
+
+          {/* 配方庫列表 */}
+          {showLibrary && (
+            <div className="mt-6 border-t border-stone-100 pt-6 animate-fade-in">
+              <h3 className="text-sm font-black text-stone-400 mb-4 flex items-center gap-2 uppercase tracking-widest">
+                <History className="w-4 h-4" /> 已儲存的配方
+              </h3>
+              {savedRecipes.length === 0 ? (
+                <div className="p-8 text-center bg-stone-50 rounded-2xl border border-stone-100 italic text-stone-400 text-sm">
+                  目前還沒有任何存檔配方...
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {savedRecipes.map(recipe => (
+                    <div key={recipe.id} className="p-4 bg-white border border-stone-200 rounded-2xl flex items-center justify-between group hover:border-amber-500 hover:shadow-md transition-all">
+                      <div className="flex-1 min-w-0 cursor-pointer" onClick={() => { onLoadRecipe(recipe); setShowLibrary(false); }}>
+                        <p className="font-black text-stone-800 truncate group-hover:text-amber-700 transition-colors">{recipe.name}</p>
+                        <p className="text-[10px] text-stone-400 font-bold mt-1">
+                          {new Date(recipe.date).toLocaleDateString()} · {recipe.items.length} 支油脂 · {recipe.items.reduce((acc, i) => acc + i.weight, 0)}g
+                        </p>
+                      </div>
+                      <div className="flex gap-1 ml-4">
+                        <button
+                          onClick={() => onDeleteRecipe(recipe.id)}
+                          className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* 儲存選單 Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowSaveModal(false)} />
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 animate-scale-up border border-stone-100">
+            <button
+              onClick={() => setShowSaveModal(false)}
+              className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Bookmark className="w-8 h-8 text-amber-600" />
+              </div>
+              <h3 className="text-2xl font-black text-stone-800">為您的配方命名</h3>
+              <p className="text-stone-500 text-sm mt-2">命名後即可存入您的私藏配方庫</p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-stone-400 uppercase tracking-widest pl-1">配方名稱</label>
+                <div className="relative">
+                  <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300" />
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="例如：春季薰衣草馬賽皂"
+                    className="w-full pl-12 pr-4 py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-none focus:border-amber-500 focus:bg-white transition-all font-bold text-stone-800"
+                    value={recipeName}
+                    onChange={(e) => setRecipeName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && recipeName.trim()) {
+                        onSaveRecipe(recipeName);
+                        setRecipeName('');
+                        setShowSaveModal(false);
+                        setShowLibrary(true);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+
+              <button
+                disabled={!recipeName.trim()}
+                onClick={() => {
+                  onSaveRecipe(recipeName);
+                  setRecipeName('');
+                  setShowSaveModal(false);
+                  setShowLibrary(true);
+                }}
+                className="w-full py-4 bg-amber-600 text-white rounded-2xl font-black hover:bg-amber-700 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale shadow-lg shadow-amber-600/20 flex items-center justify-center gap-2"
+              >
+                確 定 儲 存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-7 space-y-8">

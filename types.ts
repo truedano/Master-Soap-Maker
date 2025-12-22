@@ -34,3 +34,10 @@ export interface FAQItem {
   reason: string;
   solution: string;
 }
+
+export interface SavedFormula {
+  id: string;
+  name: string;
+  items: FormulaItem[];
+  date: number;
+}

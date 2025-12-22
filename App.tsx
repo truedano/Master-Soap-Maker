@@ -3,12 +3,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SafetyAlert } from './components/SafetyAlert';
 import { Calculator, MiniQualityBars } from './components/Calculator';
 import { FAQS, OILS, QUALITY_UI } from './constants';
-import { SectionType, OilData, FormulaItem } from './types';
-import { 
-  Droplets, 
-  FlaskConical, 
-  Clock, 
-  HelpCircle, 
+import { SectionType, OilData, FormulaItem, SavedFormula } from './types';
+import {
+  Droplets,
+  FlaskConical,
+  Clock,
+  HelpCircle,
   ArrowRight,
   CheckCircle2,
   Box,
@@ -29,12 +29,13 @@ import {
 
 const STORAGE_KEY_PRICES = 'soap_master_oil_prices';
 const STORAGE_KEY_FORMULA = 'soap_master_formula';
+const STORAGE_KEY_SAVED_RECIPES = 'soap_master_saved_recipes';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof OilData | 'none'>('none');
-  
+
   // 提升配方狀態 - 從 localStorage 恢復
   const [formulaItems, setFormulaItems] = useState<FormulaItem[]>(() => {
     const savedFormula = localStorage.getItem(STORAGE_KEY_FORMULA);
@@ -66,6 +67,19 @@ const App: React.FC = () => {
     return {};
   });
 
+  // 管理存檔配方列表
+  const [savedRecipes, setSavedRecipes] = useState<SavedFormula[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_SAVED_RECIPES);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved recipes", e);
+      }
+    }
+    return [];
+  });
+
   // 當價格改變時，同步到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
@@ -75,6 +89,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_FORMULA, JSON.stringify(formulaItems));
   }, [formulaItems]);
+
+  // 當存檔列表改變時，同步到 localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SAVED_RECIPES, JSON.stringify(savedRecipes));
+  }, [savedRecipes]);
 
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
@@ -86,8 +105,8 @@ const App: React.FC = () => {
   const sortedOils = useMemo(() => {
     let result = [...OILS];
     if (searchTerm) {
-      result = result.filter(o => 
-        o.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      result = result.filter(o =>
+        o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         o.description.includes(searchTerm)
       );
     }
@@ -110,6 +129,24 @@ const App: React.FC = () => {
     setOilPrices(prev => ({ ...prev, [oilId]: price }));
   };
 
+  const handleSaveRecipe = (name: string) => {
+    const newRecipe: SavedFormula = {
+      id: Date.now().toString(),
+      name,
+      items: [...formulaItems],
+      date: Date.now()
+    };
+    setSavedRecipes(prev => [newRecipe, ...prev]);
+  };
+
+  const handleDeleteRecipe = (id: string) => {
+    setSavedRecipes(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleLoadRecipe = (recipe: SavedFormula) => {
+    setFormulaItems(recipe.items);
+  };
+
   return (
     <div className="min-h-screen pb-12 bg-[#fcfaf7]">
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
@@ -123,7 +160,7 @@ const App: React.FC = () => {
                 手工皂<span className="text-amber-600">製作大師</span>
               </h1>
             </div>
-            
+
             <nav className="flex w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
               <div className="flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4">
                 {[
@@ -133,14 +170,13 @@ const App: React.FC = () => {
                   { id: SectionType.POST_PRODUCTION, label: '脫模晾皂' },
                   { id: SectionType.FAQ, label: '問題排除' },
                 ].map((tab) => (
-                  <button 
+                  <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`whitespace-nowrap text-xs md:text-sm font-bold tracking-widest transition-all px-3 py-2 rounded-full border active:scale-95 ${
-                      activeTab === tab.id 
-                      ? 'text-amber-700 bg-amber-50 border-amber-200 shadow-sm' 
-                      : 'text-stone-400 bg-transparent border-transparent hover:text-stone-600 hover:bg-stone-50'
-                    }`}
+                    className={`whitespace-nowrap text-xs md:text-sm font-bold tracking-widest transition-all px-3 py-2 rounded-full border active:scale-95 ${activeTab === tab.id
+                        ? 'text-amber-700 bg-amber-50 border-amber-200 shadow-sm'
+                        : 'text-stone-400 bg-transparent border-transparent hover:text-stone-600 hover:bg-stone-50'
+                      }`}
                   >
                     {tab.label}
                   </button>
@@ -156,17 +192,21 @@ const App: React.FC = () => {
 
         <div id="main-content" className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
           <div className="lg:col-span-8 space-y-8 md:space-y-12">
-            
+
             {activeTab === SectionType.CALCULATOR && (
-              <Calculator 
+              <Calculator
                 items={formulaItems}
                 setItems={setFormulaItems}
                 oilPrices={oilPrices}
                 onSetPrice={handleSetPrice}
+                savedRecipes={savedRecipes}
+                onSaveRecipe={handleSaveRecipe}
+                onDeleteRecipe={handleDeleteRecipe}
+                onLoadRecipe={handleLoadRecipe}
                 onFindOil={(quality) => {
                   setActiveTab(SectionType.PRE_PRODUCTION);
                   setSortBy(quality as any);
-                }} 
+                }}
               />
             )}
 
@@ -190,9 +230,9 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="relative">
                         <Search className="absolute left-4 top-3.5 w-5 h-5 text-stone-500" />
-                        <input 
-                          type="text" 
-                          placeholder="搜尋油脂名稱或特性" 
+                        <input
+                          type="text"
+                          placeholder="搜尋油脂名稱或特性"
                           className="w-full bg-white/10 text-white border border-white/10 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:ring-4 focus:ring-amber-500/30 transition-all font-medium placeholder:text-stone-600"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
@@ -200,7 +240,7 @@ const App: React.FC = () => {
                       </div>
                       <div className="relative">
                         <Filter className="absolute left-4 top-3.5 w-5 h-5 text-amber-500" />
-                        <select 
+                        <select
                           className="w-full bg-white text-stone-800 rounded-xl pl-12 pr-10 py-3.5 outline-none focus:ring-4 focus:ring-amber-500/30 transition-all font-bold appearance-none cursor-pointer"
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value as any)}
@@ -224,21 +264,19 @@ const App: React.FC = () => {
                     // 在百科頁面也反應自訂價格
                     const currentPrice = oilPrices[oil.id] || oil.defaultPrice;
                     return (
-                      <div 
-                        key={oil.id} 
-                        className={`bg-white border p-6 rounded-3xl transition-all group relative ${
-                          sortBy !== 'none' && index < 3 
-                          ? 'border-amber-200 shadow-md ring-1 ring-amber-100' 
-                          : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
-                        }`}
+                      <div
+                        key={oil.id}
+                        className={`bg-white border p-6 rounded-3xl transition-all group relative ${sortBy !== 'none' && index < 3
+                            ? 'border-amber-200 shadow-md ring-1 ring-amber-100'
+                            : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
+                          }`}
                       >
                         {sortBy !== 'none' && index < 3 && (
                           <div className="absolute -top-3 -left-3 flex items-center justify-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 ${
-                              index === 0 ? 'bg-yellow-400 border-yellow-200 text-yellow-900' : 
-                              index === 1 ? 'bg-stone-300 border-stone-100 text-stone-700' : 
-                              'bg-amber-600 border-amber-400 text-white'
-                            }`}>
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 ${index === 0 ? 'bg-yellow-400 border-yellow-200 text-yellow-900' :
+                                index === 1 ? 'bg-stone-300 border-stone-100 text-stone-700' :
+                                  'bg-amber-600 border-amber-400 text-white'
+                              }`}>
                               <Trophy className="w-5 h-5" />
                             </div>
                           </div>
@@ -266,8 +304,8 @@ const App: React.FC = () => {
                         </div>
 
                         <p className="text-stone-600 text-sm leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: oil.description }}></p>
-                        
-                        <button 
+
+                        <button
                           onClick={() => handleAddOilToFormula(oil.id)}
                           className="mt-2 w-full py-3 bg-amber-600 text-white text-xs font-black rounded-xl hover:bg-amber-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-md active:scale-95"
                         >
@@ -360,12 +398,12 @@ const App: React.FC = () => {
             </div>
 
             <div className="bg-stone-50 p-6 rounded-3xl border border-stone-100">
-               <h3 className="font-black text-stone-800 mb-4 flex items-center gap-2">
-                 <ShieldCheck className="w-5 h-5 text-green-600" /> 系統狀態
-               </h3>
-               <p className="text-stone-500 text-xs leading-relaxed">
-                 所有配方與成本估算皆在瀏覽器端即時完成，資料完全隱私且支援離線使用。
-               </p>
+              <h3 className="font-black text-stone-800 mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-green-600" /> 系統狀態
+              </h3>
+              <p className="text-stone-500 text-xs leading-relaxed">
+                所有配方與成本估算皆在瀏覽器端即時完成，資料完全隱私且支援離線使用。
+              </p>
             </div>
           </div>
         </div>
