@@ -69,6 +69,169 @@ const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, 
   );
 };
 
+// 成本分佈圖
+const CostChart: React.FC<{ items: FormulaItem[], oilPrices: Record<string, number> }> = ({ items, oilPrices }) => {
+  const breakdown = useMemo(() => {
+    let total = 0;
+    const data = items.map(item => {
+      const oil = OILS.find(o => o.id === item.oilId);
+      if (!oil || item.weight <= 0) return null;
+      const price = ((oilPrices[oil.id] || oil.defaultPrice || 0) / 1000) * item.weight;
+      total += price;
+      return { name: oil.name, price };
+    }).filter(Boolean) as { name: string, price: number }[];
+
+    return { total, data: data.sort((a, b) => b.price - a.price) };
+  }, [items, oilPrices]);
+
+  if (breakdown.total === 0) return null;
+
+  return (
+    <div className="space-y-3 mt-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">預算分佈 (Cost Distribution)</span>
+        <span className="text-[10px] font-black text-amber-600">Total: NT$ {Math.round(breakdown.total)}</span>
+      </div>
+      <div className="flex h-3 w-full rounded-full overflow-hidden shadow-inner bg-stone-200">
+        {breakdown.data.map((item, i) => {
+          const percent = (item.price / breakdown.total) * 100;
+          return (
+            <div
+              key={i}
+              className="h-full transition-all duration-500 hover:opacity-80 cursor-help"
+              style={{
+                width: `${percent}%`,
+                backgroundColor: `hsl(${20 + i * 40}, 70%, 50%)`
+              }}
+              title={`${item.name}: ${Math.round(percent)}%`}
+            />
+          );
+        })}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {breakdown.data.slice(0, 4).map((item, i) => (
+          <div key={i} className="flex items-center gap-1.5 overflow-hidden">
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: `hsl(${20 + i * 40}, 70%, 50%)` }} />
+            <span className="text-[9px] font-bold text-stone-500 truncate">{item.name}</span>
+            <span className="text-[9px] font-black text-stone-400 ml-auto">{Math.round((item.price / breakdown.total) * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// 製作模式 Overlay
+const ProductionMode: React.FC<{
+  items: FormulaItem[],
+  results: any,
+  onClose: () => void
+}> = ({ items, results, onClose }) => {
+  const [steps, setSteps] = useState<Record<string, boolean>>({});
+
+  const toggleStep = (id: string) => {
+    setSteps(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-white overflow-y-auto animate-fade-in">
+      <div className="max-w-3xl mx-auto p-6 md:p-12 space-y-12 pb-32">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b-2 border-stone-100 pb-6">
+          <div>
+            <h1 className="text-4xl font-black text-stone-900 tracking-tighter">打皂製作單</h1>
+            <p className="text-stone-400 font-bold mt-1">請準備好防護裝備：手套、口罩、護目鏡</p>
+          </div>
+          <button onClick={onClose} className="p-3 bg-stone-100 rounded-2xl hover:bg-stone-200 transition-all">
+            <X className="w-8 h-8 text-stone-600" />
+          </button>
+        </div>
+
+        {/* 核心數據 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-8 bg-stone-900 text-white rounded-[2.5rem] space-y-1">
+            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">氫氧化鈉 (NaOH)</p>
+            <p className="text-5xl font-black tabular-nums tracking-tighter text-amber-400">{results.totalNaoh}<span className="text-xl ml-1">g</span></p>
+          </div>
+          <div className="p-8 bg-blue-600 text-white rounded-[2.5rem] space-y-1 shadow-xl shadow-blue-100">
+            <p className="text-xs font-black text-blue-200 uppercase tracking-widest">純水 (Water)</p>
+            <p className="text-5xl font-black tabular-nums tracking-tighter">{results.water}<span className="text-xl ml-1">g</span></p>
+          </div>
+          <div className="p-8 bg-stone-100 text-stone-900 rounded-[2.5rem] space-y-1 border-2 border-stone-200">
+            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">總油脂 (Total Oil)</p>
+            <p className="text-5xl font-black tabular-nums tracking-tighter">{results.totalWeight}<span className="text-xl ml-1">g</span></p>
+          </div>
+        </div>
+
+        {/* 油脂清單 */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-black text-stone-800 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+              <span className="text-amber-600 text-sm">1</span>
+            </div>
+            稱取油脂 (Weighing Oils)
+          </h2>
+          <div className="grid grid-cols-1 gap-4">
+            {items.map((item, i) => {
+              const oil = OILS.find(o => o.id === item.oilId);
+              if (!oil || item.weight <= 0) return null;
+              const stepId = `oil-${i}`;
+              return (
+                <div
+                  key={i}
+                  onClick={() => toggleStep(stepId)}
+                  className={`flex items-center justify-between p-6 rounded-3xl border-2 transition-all cursor-pointer ${steps[stepId] ? 'bg-stone-50 border-stone-200 opacity-40' : 'bg-white border-stone-800 shadow-sm hover:translate-x-1'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${steps[stepId] ? 'bg-green-500 border-green-500' : 'border-stone-800'}`}>
+                      {steps[stepId] && <CheckCircle2 className="w-5 h-5 text-white" />}
+                    </div>
+                    <span className="text-xl font-black text-stone-800">{oil.name}</span>
+                  </div>
+                  <span className="text-2xl font-black tabular-nums">{item.weight}g</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 製作步驟紀錄 */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-black text-stone-800 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 text-sm">2</span>
+            </div>
+            製作流程 (Workflow)
+          </h2>
+          <div className="space-y-4">
+            {[
+              { id: 'mix-water', label: '鹼水製作 (冷卻至 40-45°C)' },
+              { id: 'mix-oil', label: '油脂融合 (加溫至 40-45°C)' },
+              { id: 'blend', label: '油鹼混合 (攪拌至 Trace)' },
+              { id: 'essential', label: '添加精油/添加物' },
+              { id: 'mold', label: '入模並封保鮮膜' },
+            ].map((step) => (
+              <div
+                key={step.id}
+                onClick={() => toggleStep(step.id)}
+                className={`flex items-center gap-4 p-6 rounded-3xl border-2 transition-all cursor-pointer ${steps[step.id] ? 'bg-green-50 border-green-200 opacity-40' : 'bg-white border-stone-200 hover:border-blue-400'}`}
+              >
+                <div className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center ${steps[step.id] ? 'bg-green-500 border-green-500' : 'border-stone-300'}`}>
+                  {steps[step.id] && <CheckCircle2 className="w-5 h-5 text-white" />}
+                </div>
+                <span className={`text-lg font-black ${steps[step.id] ? 'text-green-700' : 'text-stone-600'}`}>{step.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-stone-100 md:hidden">
+        <button onClick={onClose} className="w-full py-4 bg-stone-900 text-white rounded-2xl font-black text-lg">結束製作</button>
+      </div>
+    </div>
+  );
+};
+
 // 雷達圖組件
 const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQualities | null }> = ({ qualities, previewQualities }) => {
   const size = 320;
@@ -356,6 +519,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [inputMode, setInputMode] = useState<'weight' | 'percent'>('weight');
   const [showPresets, setShowPresets] = useState(false);
+  const [showProduction, setShowProduction] = useState(false);
 
   const [hoveredOil, setHoveredOil] = useState<OilData | null>(null);
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
@@ -585,6 +749,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
               <DollarSign className="w-3 h-3" />
               成本模式: {showCost ? 'ON' : 'OFF'}
             </button>
+            <button
+              onClick={() => setShowProduction(true)}
+              className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-full border border-blue-700 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-100"
+            >
+              <FileText className="w-3 h-3" />
+              開始製作 (Production)
+            </button>
             {results.totalWeight > 0 && (
               <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
                 <Activity className="w-3.5 h-3.5 text-amber-400" />
@@ -800,6 +971,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
 
             <div className="space-y-6">
               <div className="space-y-2">
+                <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mt-1">配方總額 (成本)</p>
+                {showCost && (
+                  <CostChart items={items} oilPrices={oilPrices} />
+                )}
+              </div>
+              <div className="space-y-2">
                 <label className="text-xs font-black text-stone-400 uppercase tracking-widest pl-1">配方名稱</label>
                 <div className="relative">
                   <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300" />
@@ -915,6 +1092,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                     </p>
                   </div>
                 </div>
+                <CostChart items={items} oilPrices={oilPrices} />
               </div>
             </div>
           )}
@@ -1088,6 +1266,15 @@ export const Calculator: React.FC<CalculatorProps> = ({
             </div>
           </div>
         </div>
+
+        {/* 製作模式 Overlay */}
+        {showProduction && (
+          <ProductionMode
+            items={items}
+            results={results}
+            onClose={() => setShowProduction(false)}
+          />
+        )}
       </div>
     </div>
   );
