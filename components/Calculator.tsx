@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { OILS, QUALITY_RANGES, QUALITY_UI } from '../constants';
 import { FormulaItem, OilQualities, OilData, SavedFormula } from '../types';
+import { NumberTicker } from './NumberTicker';
 import {
   Calculator as CalcIcon,
   Trash2,
@@ -625,9 +626,10 @@ export const Calculator: React.FC<CalculatorProps> = ({
                           <span className="text-[10px] font-black text-stone-500 uppercase block leading-none mb-1">分項小計 (Cost)</span>
                           <div className="flex items-baseline gap-1">
                             <span className="text-xs font-black text-amber-600">$</span>
-                            <span className="text-xl font-black text-amber-800 tabular-nums leading-none">
-                              {Math.round((currentPrice / 1000) * item.weight)}
-                            </span>
+                            <NumberTicker
+                              value={Math.round((currentPrice / 1000) * item.weight)}
+                              className="text-xl font-black text-amber-800 tabular-nums leading-none"
+                            />
                           </div>
                         </div>
                         <div className="p-1.5 bg-amber-100 rounded-full">
@@ -779,10 +781,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   <h3 className="text-sm font-black text-stone-400 border-b border-stone-100 pb-2 uppercase tracking-widest">鹼水部分</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-sm font-bold text-red-800 border border-red-100">
-                      <span>NaOH 需求量</span><span>{results.totalNaoh} g</span>
+                      <span>NaOH 需求量</span>
+                      <NumberTicker value={results.totalNaoh} precision={1} suffix=" g" className="font-black" />
                     </div>
                     <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100">
-                      <span>水量 (2.3倍)</span><span>{results.water} g</span>
+                      <span>水量 (2.3倍)</span>
+                      <NumberTicker value={results.water} precision={1} suffix=" g" className="font-black" />
                     </div>
                   </div>
                 </div>
@@ -804,14 +808,16 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
                     <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">總原料成本</span>
-                    <span className="text-4xl font-black text-stone-800 tabular-nums">${results.totalCost}</span>
+                    <NumberTicker value={results.totalCost} prefix="$" className="text-4xl font-black text-stone-800 tabular-nums" />
                     <span className="text-xs font-bold text-stone-400 ml-1">TWD</span>
                   </div>
                   <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
                     <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">平均成本 (/100g)</span>
-                    <span className="text-4xl font-black text-stone-800 tabular-nums">
-                      ${results.totalWeight > 0 ? Math.round((results.totalCost / results.totalWeight) * 100) : 0}
-                    </span>
+                    <NumberTicker
+                      value={results.totalWeight > 0 ? Math.round((results.totalCost / results.totalWeight) * 100) : 0}
+                      prefix="$"
+                      className="text-4xl font-black text-stone-800 tabular-nums"
+                    />
                   </div>
                   <div className="p-6 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-2">
@@ -846,9 +852,11 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       配方總 INS 值 <Info className="w-3 h-3" />
                     </p>
                     <div className="flex items-center justify-end gap-2">
-                      <p className={`text-5xl font-black tabular-nums tracking-tighter ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}>
-                        {results.avgIns}
-                      </p>
+                      <NumberTicker
+                        value={results.avgIns}
+                        precision={1}
+                        className={`text-5xl font-black tabular-nums tracking-tighter ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}
+                      />
                     </div>
                   </div>
                 </Tooltip>
@@ -886,9 +894,10 @@ export const Calculator: React.FC<CalculatorProps> = ({
                           <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${statusUI.color.replace('text-', 'border-').replace('text-', 'bg-')}/5 ${statusUI.color}`}>
                             {statusUI.label}
                           </span>
-                          <span className={`text-2xl font-black tabular-nums ${statusUI.color}`}>
-                            {val}
-                          </span>
+                          <NumberTicker
+                            value={val}
+                            className={`text-2xl font-black tabular-nums ${statusUI.color}`}
+                          />
                         </div>
                         {previewVal !== null && previewVal !== val && (
                           <div className={`text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
