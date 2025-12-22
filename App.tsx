@@ -1,18 +1,15 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SafetyAlert } from './components/SafetyAlert';
 import { Calculator } from './components/Calculator';
-import { Assistant } from './components/Assistant';
-import { FAQS, OILS, QUALITY_RANGES, QUALITY_UI } from './constants';
-import { SectionType, OilData } from './types';
+import { FAQS, OILS, QUALITY_UI } from './constants';
+import { SectionType, OilData, FormulaItem } from './types';
 import { 
   Droplets, 
-  Settings, 
   FlaskConical, 
   Clock, 
   HelpCircle, 
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
   Box,
   ThermometerSun,
@@ -22,9 +19,9 @@ import {
   Search,
   Filter,
   Trophy,
-  MessageSquareText,
   ChevronDown,
   Shield,
+  ShieldCheck,
   Zap,
   Waves
 } from 'lucide-react';
@@ -33,9 +30,14 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof OilData | 'none'>('none');
-  const [showAssistant, setShowAssistant] = useState(false);
+  
+  // 提升配方狀態，讓百科頁面也能修改它
+  const [formulaItems, setFormulaItems] = useState<FormulaItem[]>([
+    { oilId: 'coconut', weight: 150 },
+    { oilId: 'palm', weight: 100 },
+    { oilId: 'olive', weight: 250 },
+  ]);
 
-  // 切換分頁時自動捲動到內容區域上方
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
@@ -43,23 +45,33 @@ const App: React.FC = () => {
     }
   }, [activeTab]);
 
-  // 排序與過濾邏輯
   const sortedOils = useMemo(() => {
     let result = [...OILS];
-    
     if (searchTerm) {
       result = result.filter(o => 
         o.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         o.description.includes(searchTerm)
       );
     }
-
     if (sortBy !== 'none') {
       result.sort((a, b) => (b[sortBy] as number) - (a[sortBy] as number));
     }
-    
     return result;
   }, [searchTerm, sortBy]);
+
+  // 實作「加入配方計算」邏輯
+  const handleAddOilToFormula = (oilId: string) => {
+    setFormulaItems(prev => {
+      // 檢查是否已經存在於配方中
+      const exists = prev.find(item => item.oilId === oilId);
+      if (exists) return prev; // 已存在則不重複加入
+      
+      // 新增油脂，預設給予 100g 方便後續調整
+      return [...prev, { oilId, weight: 100 }];
+    });
+    // 切換回計算機頁面
+    setActiveTab(SectionType.CALCULATOR);
+  };
 
   const getQualityIcon = (key: string) => {
     switch (key) {
@@ -121,6 +133,8 @@ const App: React.FC = () => {
             
             {activeTab === SectionType.CALCULATOR && (
               <Calculator 
+                items={formulaItems}
+                setItems={setFormulaItems}
                 onFindOil={(quality) => {
                   setActiveTab(SectionType.PRE_PRODUCTION);
                   setSortBy(quality as any);
@@ -130,12 +144,10 @@ const App: React.FC = () => {
 
             {activeTab === SectionType.PRE_PRODUCTION && (
               <div className="space-y-8 animate-fade-in">
-                {/* 搜尋與篩選工具列 */}
                 <div className="bg-stone-900 p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-xl relative overflow-hidden">
                   <div className="absolute -right-20 -top-20 opacity-10 pointer-events-none">
                     <BookOpen className="w-80 h-80 text-white" />
                   </div>
-                  
                   <div className="relative z-10">
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                       <div className="space-y-2">
@@ -152,8 +164,8 @@ const App: React.FC = () => {
                         <Search className="absolute left-4 top-3.5 w-5 h-5 text-stone-500" />
                         <input 
                           type="text" 
-                          placeholder="搜尋油脂名稱或特性 (例如: 溫和、頭髮...)" 
-                          className="w-full bg-white/10 text-white border border-white/10 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:ring-4 focus:ring-amber-500/30 transition-all font-medium placeholder:text-stone-600 focus:bg-white/20"
+                          placeholder="搜尋油脂名稱或特性" 
+                          className="w-full bg-white/10 text-white border border-white/10 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:ring-4 focus:ring-amber-500/30 transition-all font-medium placeholder:text-stone-600"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -166,11 +178,11 @@ const App: React.FC = () => {
                           onChange={(e) => setSortBy(e.target.value as any)}
                         >
                           <option value="none">-- 選擇排行指標 --</option>
-                          <option value="hardness">🏆 按【{QUALITY_UI.hardness.label}】排行</option>
-                          <option value="cleansing">🏆 按【{QUALITY_UI.cleansing.label}】排行</option>
-                          <option value="conditioning">🏆 按【{QUALITY_UI.conditioning.label}】排行</option>
-                          <option value="bubbly">🏆 按【{QUALITY_UI.bubbly.label}】排行</option>
-                          <option value="creamy">🏆 按【{QUALITY_UI.creamy.label}】排行</option>
+                          <option value="hardness">🏆 按【硬度】排行</option>
+                          <option value="cleansing">🏆 按【清潔】排行</option>
+                          <option value="conditioning">🏆 按【保濕】排行</option>
+                          <option value="bubbly">🏆 按【起泡】排行</option>
+                          <option value="creamy">🏆 按【穩定】排行</option>
                           <option value="ins">🏆 按【INS 值】排行</option>
                         </select>
                         <ChevronDown className="absolute right-4 top-4 w-4 h-4 text-stone-400 pointer-events-none" />
@@ -179,7 +191,6 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 油品排行列表 */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {sortedOils.map((oil, index) => (
                     <div 
@@ -190,7 +201,6 @@ const App: React.FC = () => {
                         : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
                       }`}
                     >
-                      {/* 排行獎牌 */}
                       {sortBy !== 'none' && index < 3 && (
                         <div className="absolute -top-3 -left-3 flex items-center justify-center">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 ${
@@ -200,9 +210,6 @@ const App: React.FC = () => {
                           }`}>
                             <Trophy className="w-5 h-5" />
                           </div>
-                          <span className="ml-2 text-xs font-black text-amber-800 uppercase bg-amber-100 px-2 py-0.5 rounded-full">
-                            TOP {index + 1}
-                          </span>
                         </div>
                       )}
 
@@ -219,37 +226,10 @@ const App: React.FC = () => {
 
                       <p className="text-stone-600 text-sm leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: oil.description }}></p>
                       
-                      {/* 五力進度條 */}
-                      <div className="space-y-3 pt-4 border-t border-stone-50">
-                        {(Object.keys(QUALITY_UI) as Array<keyof typeof QUALITY_UI>).map((key) => {
-                          const ui = QUALITY_UI[key];
-                          const val = oil[key];
-                          return (
-                            <div key={key} className="space-y-1">
-                              <div className="flex justify-between items-end">
-                                <span className={`flex items-center gap-1 text-[10px] font-black ${sortBy === key ? ui.tailwind.replace('bg-', 'text-') : 'text-stone-400'}`}>
-                                  {getQualityIcon(key)} {ui.label} {sortBy === key && '🎯'}
-                                </span>
-                                <span className={`text-xs font-black ${sortBy === key ? ui.tailwind.replace('bg-', 'text-') : 'text-stone-600'}`}>
-                                  {val}
-                                </span>
-                              </div>
-                              <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
-                                <div 
-                                  className={`h-full ${sortBy === key ? 'bg-amber-500' : ui.bg} transition-all duration-500`}
-                                  style={{ width: `${Math.min(val, 100)}%` }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
+                      {/* 修正按鈕邏輯：呼叫 handleAddOilToFormula */}
                       <button 
-                        onClick={() => {
-                          setActiveTab(SectionType.CALCULATOR);
-                        }}
-                        className="mt-6 w-full py-3 bg-stone-50 text-stone-400 text-xs font-black rounded-xl hover:bg-amber-600 hover:text-white transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-sm active:scale-95"
+                        onClick={() => handleAddOilToFormula(oil.id)}
+                        className="mt-6 w-full py-3 bg-amber-600 text-white text-xs font-black rounded-xl hover:bg-amber-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-md active:scale-95"
                       >
                         加入配方計算 <ArrowRight className="w-4 h-4" />
                       </button>
@@ -264,34 +244,13 @@ const App: React.FC = () => {
                 <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-6 md:mb-8 flex items-center gap-3">
                   <FlaskConical className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 製作過程關鍵
                 </h2>
-                <div className="space-y-8 md:space-y-10">
-                  <div className="bg-white p-5 md:p-8 rounded-xl md:rounded-2xl shadow-sm border border-stone-100">
-                    <h3 className="text-lg md:text-xl font-bold text-stone-800 mb-4 flex items-center gap-2">
+                <div className="space-y-8">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                    <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
                       <ThermometerSun className="text-orange-500" /> 溫度控制 (Temperature)
                     </h3>
-                    <p className="text-stone-600 text-sm md:text-base mb-4 leading-relaxed">
-                      油溫與鹼液溫度的「溫差」建議在 10℃ 以內。混合最佳區間：
-                    </p>
-                    <div className="inline-flex items-center justify-center px-6 py-4 bg-orange-50 border-2 border-orange-100 rounded-2xl font-black text-2xl md:text-3xl text-orange-700 shadow-inner">
+                    <div className="inline-flex items-center justify-center px-6 py-4 bg-orange-50 border-2 border-orange-100 rounded-2xl font-black text-3xl text-orange-700 shadow-inner">
                       40℃ ~ 45℃
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg md:text-xl font-bold text-stone-800 mb-6">攪拌狀態 (Trace) 判定</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-                      <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
-                        <h4 className="font-bold text-amber-700 mb-3 border-b border-amber-50 pb-2">Light Trace (輕T)</h4>
-                        <p className="text-xs md:text-sm text-stone-500 leading-relaxed">像玉米濃湯，液體流動但有痕跡。此時適合分鍋、調色。</p>
-                      </div>
-                      <div className="bg-white p-6 rounded-2xl border-2 border-amber-400 shadow-lg ring-4 ring-amber-100/30">
-                        <h4 className="font-bold text-amber-800 mb-3 border-b border-amber-50 pb-2">Trace (推薦入模)</h4>
-                        <p className="text-xs md:text-sm text-stone-600 leading-relaxed font-medium">像美乃滋。用刮刀畫「8」字痕跡不會立刻消失。適合加入精油。</p>
-                      </div>
-                      <div className="bg-stone-100 p-6 rounded-2xl border border-stone-200 opacity-60">
-                        <h4 className="font-bold text-stone-400 mb-3 border-b border-stone-50 pb-2">Over Trace (重T)</h4>
-                        <p className="text-xs md:text-sm text-stone-400 leading-relaxed">過於濃稠。入模會產生氣泡空隙，成品表面粗糙。</p>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -303,26 +262,8 @@ const App: React.FC = () => {
                 <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-6 md:mb-8 flex items-center gap-3">
                   <Box className="text-stone-600 w-6 h-6 md:w-8 md:h-8" /> 脫模與晾皂
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-                  <div className="bg-stone-50 p-6 md:p-8 rounded-2xl border border-stone-100">
-                    <h3 className="text-lg md:text-xl font-bold text-stone-800 mb-4">保溫的重要性</h3>
-                    <p className="text-stone-600 text-sm md:text-base leading-relaxed">
-                      入模後需保溫 24 小時。保溫不足易產生「白粉（皂粉）」；保溫過度則可能產生果凍效應。
-                    </p>
-                  </div>
-                  <div className="bg-stone-900 p-6 md:p-8 rounded-2xl text-white shadow-xl">
-                    <h3 className="text-lg md:text-xl font-bold mb-4 text-amber-400">熟成參考表</h3>
-                    <ul className="space-y-4">
-                      <li className="flex justify-between items-center border-b border-white/10 pb-2">
-                        <span className="text-stone-400 font-medium">一般手工皂</span>
-                        <span className="font-black text-xl">4 ~ 6 週</span>
-                      </li>
-                      <li className="flex justify-between items-center border-b border-white/10 pb-2">
-                        <span className="text-stone-400 font-medium">純橄欖皂</span>
-                        <span className="font-black text-xl">8 週以上</span>
-                      </li>
-                    </ul>
-                  </div>
+                <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                  <p className="text-stone-600 leading-relaxed">入模後需保溫 24 小時。保溫不足易產生「皂粉」；保溫過度則可能產生果凍效應。</p>
                 </div>
               </div>
             )}
@@ -330,31 +271,20 @@ const App: React.FC = () => {
             {activeTab === SectionType.FAQ && (
               <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-sm border border-stone-100 animate-fade-in">
                 <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-8 md:mb-10 flex items-center gap-3">
-                  <HelpCircle className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 常見問題 (Troubleshooting)
+                  <HelpCircle className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 常見問題排除
                 </h2>
-                <div className="grid grid-cols-1 gap-6 md:gap-8">
+                <div className="grid grid-cols-1 gap-6">
                   {FAQS.map((faq, i) => (
-                    <div key={i} className="group border border-stone-100 rounded-3xl p-6 md:p-8 hover:border-amber-200 hover:shadow-xl transition-all bg-white">
-                      <div className="flex items-start gap-4 mb-6">
-                        <span className="flex-shrink-0 flex items-center justify-center w-10 h-10 bg-amber-100 text-amber-700 rounded-2xl text-lg font-black shadow-inner">
-                          {i + 1}
-                        </span>
-                        <h3 className="text-xl md:text-2xl font-black text-stone-800 leading-tight">
-                          {faq.symptom}
-                        </h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        <div className="bg-stone-50 p-5 rounded-2xl border border-stone-100">
-                          <p className="text-[10px] md:text-xs font-black text-stone-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <Info className="w-3 h-3" /> 可能原因
-                          </p>
-                          <p className="text-stone-600 text-sm md:text-base leading-relaxed">{faq.reason}</p>
+                    <div key={i} className="border border-stone-100 rounded-3xl p-6 hover:shadow-lg transition-all bg-white">
+                      <h3 className="text-xl font-black text-stone-800 mb-4">{faq.symptom}</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-stone-50 p-4 rounded-xl text-sm">
+                          <p className="font-bold text-stone-400 mb-1">可能原因</p>
+                          <p className="text-stone-600">{faq.reason}</p>
                         </div>
-                        <div className="bg-amber-50 p-5 rounded-2xl border border-amber-100">
-                          <p className="text-[10px] md:text-xs font-black text-amber-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <CheckCircle2 className="w-3 h-3" /> 解決方法
-                          </p>
-                          <p className="text-amber-900 text-sm md:text-base font-bold leading-relaxed">{faq.solution}</p>
+                        <div className="bg-amber-50 p-4 rounded-xl text-sm">
+                          <p className="font-bold text-amber-600 mb-1">解決方法</p>
+                          <p className="text-amber-900 font-bold">{faq.solution}</p>
                         </div>
                       </div>
                     </div>
@@ -365,65 +295,43 @@ const App: React.FC = () => {
           </div>
 
           <div className="lg:col-span-4 space-y-6 md:space-y-8">
-            <div className="bg-stone-900 p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:opacity-10 transition-opacity">
-                <ShieldCheck className="w-48 h-48" />
-              </div>
-              <h3 className="text-2xl font-black mb-4 relative z-10 text-amber-400">智能 AI 助手</h3>
-              <p className="text-stone-400 text-sm mb-8 relative z-10 leading-relaxed font-medium">
-                遇到製作困難？直接詢問 AI 導師獲取專業建議。
-              </p>
-              <button 
-                onClick={() => setShowAssistant(!showAssistant)}
-                className="w-full flex items-center justify-between p-4 bg-amber-600 rounded-2xl font-black hover:bg-amber-500 transition-all shadow-lg active:scale-95"
-              >
-                {showAssistant ? '隱藏助理' : '開啟 AI 導師'}
-                <MessageSquareText className="w-5 h-5" />
-              </button>
-            </div>
-
-            {showAssistant && (
-              <div className="animate-fade-in">
-                <Assistant />
-              </div>
-            )}
-
             <div className="p-8 bg-white border border-stone-100 rounded-3xl shadow-sm">
               <h3 className="font-black text-stone-800 mb-8 flex items-center gap-2 text-lg">
                 <Clock className="w-6 h-6 text-amber-600" /> 操作時間軸
               </h3>
               <div className="space-y-10 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[3px] before:bg-stone-50">
                 <div className="relative pl-10 group">
-                  <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-amber-500 rounded-full z-10 transition-transform group-hover:scale-125" />
-                  <p className="text-sm font-black text-stone-800 group-hover:text-amber-700">攪拌 Trace (皂化期)</p>
-                  <p className="text-xs text-stone-400 mt-1 font-medium">約 20 ~ 60 分鐘</p>
+                  <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-amber-500 rounded-full z-10" />
+                  <p className="text-sm font-black text-stone-800">攪拌 Trace (皂化期)</p>
+                  <p className="text-xs text-stone-400 mt-1">約 20 ~ 60 分鐘</p>
                 </div>
                 <div className="relative pl-10 group">
-                  <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-stone-100 rounded-full z-10 transition-transform group-hover:scale-125" />
+                  <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-stone-100 rounded-full z-10" />
                   <p className="text-sm font-black text-stone-800">入模保溫</p>
-                  <p className="text-xs text-stone-400 mt-1 font-medium">24 小時不可移動</p>
+                  <p className="text-xs text-stone-400 mt-1">24 小時不可移動</p>
                 </div>
                 <div className="relative pl-10 group">
-                  <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-stone-100 rounded-full z-10 transition-transform group-hover:scale-125" />
+                  <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-stone-100 rounded-full z-10" />
                   <p className="text-sm font-black text-stone-800">熟成晾皂</p>
-                  <p className="text-xs text-stone-400 mt-1 font-medium">4 ~ 8 週 (視氣候)</p>
+                  <p className="text-xs text-stone-400 mt-1">4 ~ 8 週</p>
                 </div>
               </div>
+            </div>
+
+            <div className="bg-stone-50 p-6 rounded-3xl border border-stone-100">
+               <h3 className="font-black text-stone-800 mb-4 flex items-center gap-2">
+                 <ShieldCheck className="w-5 h-5 text-green-600" /> 系統狀態
+               </h3>
+               <p className="text-stone-500 text-xs leading-relaxed">
+                 所有配方計算皆在您的瀏覽器端即時完成，確保資料隱私與零延遲。
+               </p>
             </div>
           </div>
         </div>
       </main>
 
       <footer className="max-w-7xl mx-auto border-t border-stone-100 py-12 px-6 text-center mt-12 opacity-60">
-        <div className="flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2 grayscale">
-            <Droplets className="w-6 h-6" />
-            <span className="font-black text-sm tracking-widest uppercase">手工皂製作大師</span>
-          </div>
-          <p className="text-stone-400 text-xs italic max-w-md mx-auto leading-relaxed">
-            本站僅供教學與輔助計算參考。進行化學反應時，請務必佩戴防護裝備。
-          </p>
-        </div>
+        <p className="text-stone-400 text-xs italic">本站僅供教學與輔助計算參考。進行化學反應時，請務必佩戴防護裝備。</p>
       </footer>
     </div>
   );

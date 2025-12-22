@@ -127,11 +127,10 @@ export const QUALITY_RANGES = {
 };
 
 // 統一五力視覺語彙定義
-// Fix: Added 'bg' property and corrected 'tailwind' to include 'bg-' prefix to satisfy component logic for text/bg colors.
 export const QUALITY_UI = {
-  hardness: { label: '硬度', icon: 'Shield', color: '#78716c', tailwind: 'bg-stone-500', bg: 'bg-stone-500' },
   cleansing: { label: '清潔', icon: 'Sparkles', color: '#e11d48', tailwind: 'bg-rose-600', bg: 'bg-rose-600' },
-  conditioning: { label: '保濕', icon: 'Droplets', color: '#0284c7', tailwind: 'bg-sky-600', bg: 'bg-sky-600' },
   bubbly: { label: '起泡', icon: 'Zap', color: '#ea580c', tailwind: 'bg-orange-600', bg: 'bg-orange-600' },
+  hardness: { label: '硬度', icon: 'Shield', color: '#78716c', tailwind: 'bg-stone-500', bg: 'bg-stone-500' },
+  conditioning: { label: '保濕', icon: 'Droplets', color: '#0284c7', tailwind: 'bg-sky-600', bg: 'bg-sky-600' },
   creamy: { label: '穩定', icon: 'Waves', color: '#16a34a', tailwind: 'bg-green-600', bg: 'bg-green-600' },
 } as const;
