@@ -13,6 +13,7 @@ export interface OilData extends OilQualities {
   ins: number;
   sap: number; // Saponification value for NaOH
   description: string;
+  defaultPrice?: number; // Price per 1000g (1kg)
 }
 
 export interface FormulaItem {

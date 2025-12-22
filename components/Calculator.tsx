@@ -23,7 +23,10 @@ import {
   Check,
   ZapIcon,
   Circle,
-  Activity
+  Activity,
+  DollarSign,
+  Tag,
+  Coins
 } from 'lucide-react';
 
 // 將 Lucide 圖標對應到 QUALITY_UI
@@ -136,7 +139,7 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
       <div className="flex gap-4 mt-4 bg-stone-50 px-4 py-2 rounded-full border border-stone-100">
         <div className="flex items-center gap-1.5">
            <div className="w-2.5 h-2.5 bg-amber-600 rounded-full" />
-           <span className="text-[10px] font-black text-stone-500">目前數值</span>
+           <span className="text-[10px] font-black text-stone-500">目前數據</span>
         </div>
         <div className="flex items-center gap-1.5">
            <div className="w-2.5 h-2.5 bg-stone-200 border border-stone-300 border-dashed rounded-full" />
@@ -148,7 +151,7 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
 };
 
 // 微型五力分布圖表
-const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
+export const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
   const qualities = [
     { key: 'hardness', ...QUALITY_UI.hardness, val: oil.hardness },
     { key: 'cleansing', ...QUALITY_UI.cleansing, val: oil.cleansing },
@@ -158,15 +161,28 @@ const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
   ];
 
   return (
-    <div className="flex gap-0.5 mt-1.5 h-1 w-24 bg-stone-100 rounded-full overflow-hidden">
-      {qualities.map(q => (
-        <div 
-          key={q.key} 
-          className={q.bg} 
-          style={{ width: `${q.val / 5}%`, minWidth: '2px' }}
-          title={`${q.label}: ${q.val}`}
-        />
-      ))}
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1 px-1">
+        <span>五力分布 (Contribution)</span>
+      </div>
+      <div className="flex gap-0.5 h-2 bg-stone-100 rounded-full overflow-hidden shadow-inner p-[1px]">
+        {qualities.map(q => (
+          <div 
+            key={q.key} 
+            className={`${q.bg} h-full rounded-sm transition-all duration-500`} 
+            style={{ width: `${Math.max(2, (q.val / 100) * 100)}%` }}
+            title={`${q.label}: ${q.val}`}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-5 gap-0.5 mt-1">
+        {qualities.map(q => (
+           <div key={q.key} className="flex flex-col items-center">
+             <div className={`w-1 h-1 rounded-full ${q.bg} mb-0.5`} />
+             <span className="text-[8px] font-black text-stone-400 scale-90">{q.val}</span>
+           </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -267,7 +283,6 @@ const CustomOilSelect: React.FC<{
                         </span>
                       ))}
                     </div>
-                    <MiniQualityBars oil={oil} />
                   </div>
                 </div>
                 <div className="text-[10px] font-black text-stone-300 ml-4 whitespace-nowrap">INS {oil.ins}</div>
@@ -283,11 +298,14 @@ const CustomOilSelect: React.FC<{
 interface CalculatorProps {
   items: FormulaItem[];
   setItems: React.Dispatch<React.SetStateAction<FormulaItem[]>>;
+  oilPrices: Record<string, number>;
+  onSetPrice: (id: string, price: number) => void;
   onFindOil: (quality: string) => void;
 }
 
-export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindOil }) => {
+export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, oilPrices, onSetPrice, onFindOil }) => {
   const [waterRatio, setWaterRatio] = useState<number>(2.3);
+  const [showCost, setShowCost] = useState(false);
   
   const [hoveredOil, setHoveredOil] = useState<OilData | null>(null);
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
@@ -299,6 +317,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       let totalWeight = 0;
       let totalInsWeight = 0;
       let totalNaoh = 0;
+      let totalCost = 0;
       const totalQualities: OilQualities = { hardness: 0, cleansing: 0, conditioning: 0, bubbly: 0, creamy: 0 };
 
       formulaItems.forEach(item => {
@@ -312,6 +331,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
           totalQualities.conditioning += (oil.conditioning * item.weight);
           totalQualities.bubbly += (oil.bubbly * item.weight);
           totalQualities.creamy += (oil.creamy * item.weight);
+          
+          const pricePerG = (oilPrices[oil.id] || oil.defaultPrice || 0) / 1000;
+          totalCost += pricePerG * item.weight;
         }
       });
 
@@ -324,7 +346,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       };
 
       const avgIns = totalWeight > 0 ? Number((totalInsWeight / totalWeight).toFixed(1)) : 0;
-      return { totalWeight, avgIns, totalNaoh, qualities: avgQualities };
+      return { totalWeight, avgIns, totalNaoh, totalCost, qualities: avgQualities };
     };
 
     const current = calculate(items);
@@ -396,7 +418,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       if (current.qualities.conditioning > 60) personality = "溫和滋潤型";
       else if (current.qualities.cleansing > 18) personality = "強效清爽型";
       else if (current.qualities.hardness > 45) personality = "極硬耐用型";
-      else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "配方平衡型";
+      else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "平衡穩定型";
     }
 
     return {
@@ -404,6 +426,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       avgIns: current.avgIns,
       totalNaoh: Number(current.totalNaoh.toFixed(1)),
       water: Number((current.totalNaoh * waterRatio).toFixed(1)),
+      totalCost: Math.round(current.totalCost),
       qualities: current.qualities,
       previewQualities: preview?.qualities || null,
       suggestions,
@@ -411,7 +434,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       personality,
       baseSuggestWeight
     };
-  }, [items, waterRatio, hoveredOil, previewMode, hoveringSlotIndex, previewWeightChange]);
+  }, [items, waterRatio, hoveredOil, previewMode, hoveringSlotIndex, previewWeightChange, oilPrices]);
 
   const applyAdjustment = (oilName: string, weightChange: number, type: 'add' | 'reduce') => {
     const oil = OILS.find(o => o.name.includes(oilName));
@@ -473,19 +496,31 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
             </div>
             <h2 className="text-xl font-bold tracking-tight">1. 配方組成 (Recipe)</h2>
           </div>
-          {results.totalWeight > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
-               <Activity className="w-3.5 h-3.5 text-amber-400" />
-               <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">配方特性：{results.personality}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setShowCost(!showCost)}
+              className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest ${
+                showCost ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
+              }`}
+            >
+              <DollarSign className="w-3 h-3" />
+              成本模式: {showCost ? 'ON' : 'OFF'}
+            </button>
+            {results.totalWeight > 0 && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
+                <Activity className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">配方導向：{results.personality}</span>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="p-4 md:p-6 space-y-4">
           <div className="space-y-3">
             {items.map((item, index) => {
+              const currentPrice = oilPrices[item.oilId] || OILS.find(o => o.id === item.oilId)?.defaultPrice || 0;
               return (
-                <div key={index} className="flex flex-col gap-2 p-4 bg-stone-50/50 rounded-2xl border border-stone-100 group hover:bg-white hover:shadow-md transition-all">
+                <div key={index} className="flex flex-col gap-3 p-4 bg-stone-50/50 rounded-2xl border border-stone-100 group hover:bg-white hover:shadow-md transition-all">
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     <div className="flex-1 w-full relative">
                       <CustomOilSelect
@@ -500,21 +535,58 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
                       />
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                      <div className="relative flex items-center bg-[#3f3a36] rounded-xl overflow-hidden transition-all">
+                      <div className="relative flex items-center bg-white border-2 border-stone-800 rounded-xl overflow-hidden transition-all shadow-sm focus-within:ring-4 focus-within:ring-stone-200">
                         <input
                           type="number"
                           value={item.weight || ''}
                           onChange={(e) => updateItem(index, 'weight', Number(e.target.value))}
-                          className="w-24 sm:w-28 p-3.5 bg-transparent text-white font-black text-right outline-none"
+                          className="w-24 sm:w-28 p-3.5 bg-white text-stone-900 font-black text-right outline-none"
                           placeholder="0"
                         />
-                        <span className="px-4 text-stone-400 font-bold text-sm border-l border-stone-600/50 h-full flex items-center">g</span>
+                        <span className="px-4 text-stone-500 font-bold text-sm border-l border-stone-200 h-full flex items-center bg-stone-50">g</span>
                       </div>
                       <button onClick={() => removeItem(index)} className="p-3.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
+
+                  {showCost && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-amber-50 rounded-xl border border-amber-200 animate-fade-in shadow-sm">
+                       <div className="flex items-center gap-3">
+                          <div className="bg-amber-600 p-2 rounded-lg shadow-sm">
+                            <Tag className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="text-sm font-black text-amber-900 tracking-tight">自訂成本</span>
+                          <div className="relative flex items-center bg-white border-2 border-amber-500 focus-within:border-amber-700 rounded-xl overflow-hidden h-11 transition-all shadow-md">
+                            <span className="pl-3 pr-1.5 text-sm font-black text-amber-700">$</span>
+                            <input 
+                              type="number"
+                              value={currentPrice}
+                              onChange={(e) => onSetPrice(item.oilId, Number(e.target.value))}
+                              className="w-28 px-1 py-1 text-base font-black text-stone-900 bg-white outline-none placeholder-stone-300"
+                              placeholder="0"
+                            />
+                            <span className="px-3 text-xs font-black text-stone-600 border-l border-amber-100 bg-amber-50/50 h-full flex items-center uppercase tracking-tighter">/ kg</span>
+                          </div>
+                       </div>
+                       
+                       <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-xl border-2 border-amber-200 shadow-sm">
+                          <div className="text-right">
+                             <span className="text-[10px] font-black text-stone-500 uppercase block leading-none mb-1">分項小計 (Cost)</span>
+                             <div className="flex items-baseline gap-1">
+                               <span className="text-xs font-black text-amber-600">$</span>
+                               <span className="text-xl font-black text-amber-800 tabular-nums leading-none">
+                                 {Math.round((currentPrice / 1000) * item.weight)}
+                               </span>
+                             </div>
+                          </div>
+                          <div className="p-1.5 bg-amber-100 rounded-full">
+                            <Coins className="w-4 h-4 text-amber-600" />
+                          </div>
+                       </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -526,40 +598,80 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        <div className="xl:col-span-7 bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
-          <div className="bg-amber-600 p-6 text-white flex items-center gap-3">
-            <Scale className="w-6 h-6" />
-            <h2 className="text-xl font-bold tracking-tight">2. 精確稱重清單</h2>
-          </div>
-          <div className="p-8 space-y-8">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 border-b border-stone-100 pb-2 uppercase tracking-widest">油相部分</h3>
-                  <div className="space-y-2">
-                    {items.filter(i => i.weight > 0).map((item, idx) => {
-                      const oil = OILS.find(o => o.id === item.oilId);
-                      return (
-                        <div key={idx} className="flex justify-between items-center p-3 hover:bg-stone-50 rounded-xl transition-colors">
-                          <span className="text-sm font-bold text-stone-600">{oil?.name}</span>
-                          <span className="font-black text-amber-700">{item.weight} g</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-sm font-black text-stone-400 border-b border-stone-100 pb-2 uppercase tracking-widest">鹼水部分</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-sm font-bold text-red-800 border border-red-100">
-                      <span>NaOH 需求量</span><span>{results.totalNaoh} g</span>
-                    </div>
-                    <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100">
-                      <span>水量 (2.3倍)</span><span>{results.water} g</span>
+        <div className="xl:col-span-7 space-y-8">
+          {/* 精確稱重 */}
+          <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
+            <div className="bg-amber-600 p-6 text-white flex items-center gap-3">
+              <Scale className="w-6 h-6" />
+              <h2 className="text-xl font-bold tracking-tight">2. 精確稱重清單</h2>
+            </div>
+            <div className="p-8 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 border-b border-stone-100 pb-2 uppercase tracking-widest">油相部分</h3>
+                    <div className="space-y-2">
+                      {items.filter(i => i.weight > 0).map((item, idx) => {
+                        const oil = OILS.find(o => o.id === item.oilId);
+                        return (
+                          <div key={idx} className="flex justify-between items-center p-3 hover:bg-stone-50 rounded-xl transition-colors">
+                            <span className="text-sm font-bold text-stone-600">{oil?.name}</span>
+                            <span className="font-black text-amber-700">{item.weight} g</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-             </div>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black text-stone-400 border-b border-stone-100 pb-2 uppercase tracking-widest">鹼水部分</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-sm font-bold text-red-800 border border-red-100">
+                        <span>NaOH 需求量</span><span>{results.totalNaoh} g</span>
+                      </div>
+                      <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100">
+                        <span>水量 (2.3倍)</span><span>{results.water} g</span>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            </div>
           </div>
+
+          {/* 成本估算面板 */}
+          {showCost && (
+            <div className="bg-white rounded-3xl shadow-xl border border-amber-100 overflow-hidden animate-fade-in ring-4 ring-amber-50">
+              <div className="bg-stone-900 p-6 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <DollarSign className="w-6 h-6 text-amber-400" />
+                  <h2 className="text-xl font-bold tracking-tight">3. 成本估算報告 (Estimates)</h2>
+                </div>
+                <div className="px-3 py-1 bg-amber-500 rounded text-[10px] font-black uppercase">僅供參考</div>
+              </div>
+              <div className="p-8">
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
+                       <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">總原料成本</span>
+                       <span className="text-4xl font-black text-stone-800 tabular-nums">${results.totalCost}</span>
+                       <span className="text-xs font-bold text-stone-400 ml-1">TWD</span>
+                    </div>
+                    <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
+                       <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">平均成本 (/100g)</span>
+                       <span className="text-4xl font-black text-stone-800 tabular-nums">
+                         ${results.totalWeight > 0 ? Math.round((results.totalCost / results.totalWeight) * 100) : 0}
+                       </span>
+                    </div>
+                    <div className="p-6 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col justify-center">
+                       <div className="flex items-center gap-2 mb-2">
+                          <Info className="w-4 h-4 text-amber-600" />
+                          <span className="text-xs font-black text-amber-700">小撇步</span>
+                       </div>
+                       <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
+                         調整橄欖油或椰子油比例，通常是控制成本最快的方法。
+                       </p>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="xl:col-span-5 flex flex-col gap-6">
@@ -602,7 +714,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
                           </span>
                           <span className="text-sm font-black text-stone-700">{ui.label}</span>
                         </div>
-                        <p className="text-[10px] font-bold text-stone-400 ml-8">理想區間：{range.min} ~ {range.max}</p>
+                        <p className="text-[10px] font-bold text-stone-400 ml-8">建議區間：{range.min} ~ {range.max}</p>
                       </div>
                       
                       <div className="text-right">
@@ -704,7 +816,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ items, setItems, onFindO
 
       <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
         <div className="bg-stone-800 p-5 text-white flex items-center gap-3">
-          <h2 className="text-xl font-bold tracking-tight">3. 五力分布與數據對比</h2>
+          <h2 className="text-xl font-bold tracking-tight">4. 五力分布與數據對比</h2>
         </div>
         <div className="p-10 flex flex-col items-center">
           <RadarChart qualities={results.qualities} previewQualities={results.previewQualities} />

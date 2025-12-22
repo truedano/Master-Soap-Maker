@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { SafetyAlert } from './components/SafetyAlert';
-import { Calculator } from './components/Calculator';
+import { Calculator, MiniQualityBars } from './components/Calculator';
 import { FAQS, OILS, QUALITY_UI } from './constants';
 import { SectionType, OilData, FormulaItem } from './types';
 import { 
@@ -23,20 +23,42 @@ import {
   Shield,
   ShieldCheck,
   Zap,
-  Waves
+  Waves,
+  DollarSign
 } from 'lucide-react';
+
+const STORAGE_KEY_PRICES = 'soap_master_oil_prices';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof OilData | 'none'>('none');
   
-  // 提升配方狀態，讓百科頁面也能修改它
+  // 提升配方狀態
   const [formulaItems, setFormulaItems] = useState<FormulaItem[]>([
     { oilId: 'coconut', weight: 150 },
     { oilId: 'palm', weight: 100 },
     { oilId: 'olive', weight: 250 },
   ]);
+
+  // 管理自訂價格狀態 - 初始值嘗試從 localStorage 讀取
+  const [oilPrices, setOilPrices] = useState<Record<string, number>>(() => {
+    const savedPrices = localStorage.getItem(STORAGE_KEY_PRICES);
+    if (savedPrices) {
+      try {
+        return JSON.parse(savedPrices);
+      } catch (e) {
+        console.error("Failed to parse saved oil prices", e);
+        return {};
+      }
+    }
+    return {};
+  });
+
+  // 當價格改變時，同步到 localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
+  }, [oilPrices]);
 
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
@@ -59,29 +81,17 @@ const App: React.FC = () => {
     return result;
   }, [searchTerm, sortBy]);
 
-  // 實作「加入配方計算」邏輯
   const handleAddOilToFormula = (oilId: string) => {
     setFormulaItems(prev => {
-      // 檢查是否已經存在於配方中
       const exists = prev.find(item => item.oilId === oilId);
-      if (exists) return prev; // 已存在則不重複加入
-      
-      // 新增油脂，預設給予 100g 方便後續調整
+      if (exists) return prev;
       return [...prev, { oilId, weight: 100 }];
     });
-    // 切換回計算機頁面
     setActiveTab(SectionType.CALCULATOR);
   };
 
-  const getQualityIcon = (key: string) => {
-    switch (key) {
-      case 'hardness': return <Shield className="w-3.5 h-3.5" />;
-      case 'cleansing': return <Sparkles className="w-3.5 h-3.5" />;
-      case 'conditioning': return <Droplets className="w-3.5 h-3.5" />;
-      case 'bubbly': return <Zap className="w-3.5 h-3.5" />;
-      case 'creamy': return <Waves className="w-3.5 h-3.5" />;
-      default: return null;
-    }
+  const handleSetPrice = (oilId: string, price: number) => {
+    setOilPrices(prev => ({ ...prev, [oilId]: price }));
   };
 
   return (
@@ -135,6 +145,8 @@ const App: React.FC = () => {
               <Calculator 
                 items={formulaItems}
                 setItems={setFormulaItems}
+                oilPrices={oilPrices}
+                onSetPrice={handleSetPrice}
                 onFindOil={(quality) => {
                   setActiveTab(SectionType.PRE_PRODUCTION);
                   setSortBy(quality as any);
@@ -155,7 +167,7 @@ const App: React.FC = () => {
                           <BookOpen className="text-amber-400 w-8 h-8" />
                           <h2 className="text-2xl md:text-3xl font-black text-white">油脂百科與五力排行</h2>
                         </div>
-                        <p className="text-stone-400 text-sm font-medium">點擊下方排序，快速找出最適合您配方的強效油脂</p>
+                        <p className="text-stone-400 text-sm font-medium">深入了解油脂特性，並可查看市場參考成本</p>
                       </div>
                     </div>
 
@@ -192,49 +204,62 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {sortedOils.map((oil, index) => (
-                    <div 
-                      key={oil.id} 
-                      className={`bg-white border p-6 rounded-3xl transition-all group relative ${
-                        sortBy !== 'none' && index < 3 
-                        ? 'border-amber-200 shadow-md ring-1 ring-amber-100' 
-                        : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
-                      }`}
-                    >
-                      {sortBy !== 'none' && index < 3 && (
-                        <div className="absolute -top-3 -left-3 flex items-center justify-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 ${
-                            index === 0 ? 'bg-yellow-400 border-yellow-200 text-yellow-900' : 
-                            index === 1 ? 'bg-stone-300 border-stone-100 text-stone-700' : 
-                            'bg-amber-600 border-amber-400 text-white'
-                          }`}>
-                            <Trophy className="w-5 h-5" />
+                  {sortedOils.map((oil, index) => {
+                    // 在百科頁面也反應自訂價格
+                    const currentPrice = oilPrices[oil.id] || oil.defaultPrice;
+                    return (
+                      <div 
+                        key={oil.id} 
+                        className={`bg-white border p-6 rounded-3xl transition-all group relative ${
+                          sortBy !== 'none' && index < 3 
+                          ? 'border-amber-200 shadow-md ring-1 ring-amber-100' 
+                          : 'border-stone-100 shadow-sm hover:border-amber-200 hover:shadow-md'
+                        }`}
+                      >
+                        {sortBy !== 'none' && index < 3 && (
+                          <div className="absolute -top-3 -left-3 flex items-center justify-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-lg border-2 ${
+                              index === 0 ? 'bg-yellow-400 border-yellow-200 text-yellow-900' : 
+                              index === 1 ? 'bg-stone-300 border-stone-100 text-stone-700' : 
+                              'bg-amber-600 border-amber-400 text-white'
+                            }`}>
+                              <Trophy className="w-5 h-5" />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1 min-w-0 pr-2">
+                            <h4 className="font-black text-stone-800 text-xl group-hover:text-amber-700 transition-colors truncate">{oil.name}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">皂化價: {oil.sap}</span>
+                              <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
+                                <DollarSign className="w-2.5 h-2.5 text-amber-600" />
+                                <span className="text-[10px] font-black text-amber-700">${currentPrice}/kg</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-100 flex-shrink-0">
+                            <p className="text-[10px] font-black text-stone-400 uppercase leading-none text-center">INS</p>
+                            <p className="text-lg font-black text-stone-700 leading-tight text-center">{oil.ins}</p>
                           </div>
                         </div>
-                      )}
 
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="font-black text-stone-800 text-xl group-hover:text-amber-700 transition-colors">{oil.name}</h4>
-                          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">皂化價: {oil.sap}</span>
+                        <div className="mb-6 p-4 bg-stone-50/50 rounded-2xl border border-stone-100/50">
+                          <MiniQualityBars oil={oil} />
                         </div>
-                        <div className="bg-stone-50 px-3 py-1.5 rounded-xl border border-stone-100">
-                          <p className="text-[10px] font-black text-stone-400 uppercase leading-none">INS</p>
-                          <p className="text-lg font-black text-stone-700 leading-tight">{oil.ins}</p>
-                        </div>
+
+                        <p className="text-stone-600 text-sm leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: oil.description }}></p>
+                        
+                        <button 
+                          onClick={() => handleAddOilToFormula(oil.id)}
+                          className="mt-2 w-full py-3 bg-amber-600 text-white text-xs font-black rounded-xl hover:bg-amber-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-md active:scale-95"
+                        >
+                          加入配方計算 <ArrowRight className="w-4 h-4" />
+                        </button>
                       </div>
-
-                      <p className="text-stone-600 text-sm leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: oil.description }}></p>
-                      
-                      {/* 修正按鈕邏輯：呼叫 handleAddOilToFormula */}
-                      <button 
-                        onClick={() => handleAddOilToFormula(oil.id)}
-                        className="mt-6 w-full py-3 bg-amber-600 text-white text-xs font-black rounded-xl hover:bg-amber-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-md active:scale-95"
-                      >
-                        加入配方計算 <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -323,7 +348,7 @@ const App: React.FC = () => {
                  <ShieldCheck className="w-5 h-5 text-green-600" /> 系統狀態
                </h3>
                <p className="text-stone-500 text-xs leading-relaxed">
-                 所有配方計算皆在您的瀏覽器端即時完成，確保資料隱私與零延遲。
+                 所有配方與成本估算皆在瀏覽器端即時完成，資料完全隱私且支援離線使用。
                </p>
             </div>
           </div>
