@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { OILS, QUALITY_RANGES, QUALITY_UI } from '../constants';
+import { OILS, QUALITY_RANGES, QUALITY_UI, PRESETS } from '../constants';
 import { FormulaItem, OilQualities, OilData, SavedFormula } from '../types';
 import { NumberTicker } from './NumberTicker';
 import {
@@ -35,7 +35,10 @@ import {
   Save,
   FolderOpen,
   X,
-  FileText
+  FileText,
+  Percent,
+  GripVertical,
+  LayoutGrid
 } from 'lucide-react';
 
 // 將 Lucide 圖標對應到 QUALITY_UI
@@ -351,6 +354,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const [showLibrary, setShowLibrary] = useState(false);
   const [recipeName, setRecipeName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [inputMode, setInputMode] = useState<'weight' | 'percent'>('weight');
+  const [showPresets, setShowPresets] = useState(false);
 
   const [hoveredOil, setHoveredOil] = useState<OilData | null>(null);
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
@@ -541,7 +546,29 @@ export const Calculator: React.FC<CalculatorProps> = ({
             </div>
             <h2 className="text-xl font-bold tracking-tight">1. 配方組成 (Recipe)</h2>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex bg-white/10 p-1 rounded-lg border border-white/20">
+              <button
+                onClick={() => setInputMode('weight')}
+                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'weight' ? 'bg-amber-500 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
+              >
+                克 (g)
+              </button>
+              <button
+                onClick={() => setInputMode('percent')}
+                className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'percent' ? 'bg-amber-500 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
+              >
+                比例 (%)
+              </button>
+            </div>
+            <button
+              onClick={() => setShowPresets(!showPresets)}
+              className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showPresets ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
+                }`}
+            >
+              <LayoutGrid className="w-3 h-3" />
+              懶人包
+            </button>
             <button
               onClick={() => setShowLibrary(!showLibrary)}
               className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showLibrary ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
@@ -567,6 +594,30 @@ export const Calculator: React.FC<CalculatorProps> = ({
           </div>
         </div>
 
+        {/* 懶人包選單 */}
+        {showPresets && (
+          <div className="bg-stone-50 border-b border-stone-100 p-4 grid grid-cols-1 md:grid-cols-3 gap-3 animate-fade-in shadow-inner">
+            {PRESETS.map(preset => (
+              <button
+                key={preset.id}
+                onClick={() => {
+                  setItems(preset.items);
+                  setShowPresets(false);
+                }}
+                className="p-4 bg-white border border-stone-200 rounded-2xl text-left hover:border-amber-500 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-black text-stone-700 group-hover:text-amber-800 transition-colors uppercase tracking-tight text-xs">{preset.name}</span>
+                  <div className="w-5 h-5 bg-stone-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-3 h-3 text-stone-300 group-hover:text-amber-500" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-stone-400 font-bold leading-tight line-clamp-2">{preset.description}</p>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="p-4 md:p-6 space-y-4">
           <div className="space-y-3">
             {items.map((item, index) => {
@@ -587,17 +638,50 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       />
                     </div>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
-                      <div className="relative flex items-center bg-white border-2 border-stone-800 rounded-xl overflow-hidden transition-all shadow-sm focus-within:ring-4 focus-within:ring-stone-200">
-                        <input
-                          type="number"
-                          value={item.weight || ''}
-                          onChange={(e) => updateItem(index, 'weight', Number(e.target.value))}
-                          className="w-24 sm:w-28 p-3.5 bg-white text-stone-900 font-black text-right outline-none"
-                          placeholder="0"
-                        />
-                        <span className="px-4 text-stone-500 font-bold text-sm border-l border-stone-200 h-full flex items-center bg-stone-50">g</span>
+                      <div className="relative flex flex-col gap-2">
+                        <div className="relative flex items-center bg-white border-2 border-stone-800 rounded-xl overflow-hidden transition-all shadow-sm focus-within:ring-4 focus-within:ring-stone-200">
+                          <input
+                            type="number"
+                            value={inputMode === 'weight' ? (item.weight || '') : (results.totalWeight > 0 ? Number(((item.weight / results.totalWeight) * 100).toFixed(1)) : 0)}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              if (inputMode === 'weight') {
+                                updateItem(index, 'weight', val);
+                              } else {
+                                // 當輸入百分比時，根據總重量反推重量
+                                const newWeight = results.totalWeight > 0 ? (val / 100) * results.totalWeight : val;
+                                updateItem(index, 'weight', newWeight);
+                              }
+                            }}
+                            className="w-24 sm:w-28 p-3.5 bg-white text-stone-900 font-black text-right outline-none"
+                            placeholder="0"
+                          />
+                          <span className="px-4 text-stone-500 font-bold text-sm border-l border-stone-200 h-full flex items-center bg-stone-50 w-10 justify-center">
+                            {inputMode === 'weight' ? 'g' : '%'}
+                          </span>
+                        </div>
+                        {/* 快速調整滑桿 */}
+                        <div className="px-1 flex items-center gap-2">
+                          <input
+                            type="range"
+                            min="0"
+                            max={inputMode === 'weight' ? Math.max(1000, results.totalWeight) : 100}
+                            step={inputMode === 'weight' ? 10 : 1}
+                            value={inputMode === 'weight' ? item.weight : (results.totalWeight > 0 ? (item.weight / results.totalWeight) * 100 : 0)}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              if (inputMode === 'weight') {
+                                updateItem(index, 'weight', val);
+                              } else {
+                                const newWeight = results.totalWeight > 0 ? (val / 100) * results.totalWeight : val;
+                                updateItem(index, 'weight', newWeight);
+                              }
+                            }}
+                            className="flex-1 h-1.5 bg-stone-200 rounded-full appearance-none cursor-pointer accent-stone-800 hover:accent-amber-500 transition-all"
+                          />
+                        </div>
                       </div>
-                      <button onClick={() => removeItem(index)} className="p-3.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-90">
+                      <button onClick={() => removeItem(index)} className="p-3.5 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-90 h-11 flex items-center justify-center mt-1">
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
