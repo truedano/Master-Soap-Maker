@@ -40,5 +40,17 @@ export interface SavedFormula {
   name: string;
   items: FormulaItem[];
   waterRatio?: number;
+  additives?: AdditiveItem[];
   date: number;
+}
+
+export type AdditiveType = 'scent' | 'color' | 'other';
+
+export interface AdditiveItem {
+  id: string;
+  name: string;
+  type: AdditiveType;
+  amount: number;
+  unit: 'g' | '%'; // % is based on total oil weight
+  price: number; // Price per unit
 }

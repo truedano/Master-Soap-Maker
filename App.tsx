@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { SafetyAlert } from './components/SafetyAlert';
 import { Calculator, MiniQualityBars } from './components/Calculator';
 import { FAQS, OILS, QUALITY_UI } from './constants';
-import { SectionType, OilData, FormulaItem, SavedFormula } from './types';
+import { SectionType, OilData, FormulaItem, SavedFormula, AdditiveItem } from './types';
 import {
   Droplets,
   FlaskConical,
@@ -60,7 +59,8 @@ const App: React.FC = () => {
     const savedFormula = localStorage.getItem(STORAGE_KEY_FORMULA);
     if (savedFormula) {
       try {
-        return JSON.parse(savedFormula);
+        const parsed = JSON.parse(savedFormula);
+        return Array.isArray(parsed) ? parsed : (parsed.items || []);
       } catch (e) {
         console.error("Failed to parse saved formula", e);
       }
@@ -70,6 +70,21 @@ const App: React.FC = () => {
       { oilId: 'palm', weight: 100 },
       { oilId: 'olive', weight: 250 },
     ];
+  });
+
+  // 管理添加物狀態
+  const [additiveItems, setAdditiveItems] = useState<AdditiveItem[]>(() => {
+    const savedFormula = localStorage.getItem(STORAGE_KEY_FORMULA);
+    if (savedFormula) {
+      try {
+        const parsed = JSON.parse(savedFormula);
+        // 如果是舊版資料可能沒有 additives 欄位，回傳空陣列
+        return parsed.additives || [];
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   });
 
   // 管理自訂價格狀態 - 初始值嘗試從 localStorage 讀取
@@ -110,10 +125,10 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
   }, [oilPrices]);
 
-  // 當配方改變時，同步到 localStorage
+  // 當配方改變時，同步到 localStorage (包含油脂與添加物)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_FORMULA, JSON.stringify(formulaItems));
-  }, [formulaItems]);
+    localStorage.setItem(STORAGE_KEY_FORMULA, JSON.stringify({ items: formulaItems, additives: additiveItems }));
+  }, [formulaItems, additiveItems]);
 
   // 當存檔列表改變時，同步到 localStorage
   useEffect(() => {
@@ -164,6 +179,7 @@ const App: React.FC = () => {
       id: Date.now().toString(),
       name,
       items: [...formulaItems],
+      additives: [...additiveItems],
       waterRatio,
       date: Date.now()
     };
@@ -176,13 +192,14 @@ const App: React.FC = () => {
 
   const handleLoadRecipe = (recipe: SavedFormula) => {
     setFormulaItems(recipe.items);
+    setAdditiveItems(recipe.additives || []);
     if (recipe.waterRatio) {
       setWaterRatio(recipe.waterRatio);
     }
   };
 
   return (
-    <div className="min-h-screen pb-12 bg-[#fcfaf7]">
+    <div className={`min-h-screen pb-12 bg-[#fcfaf7] ${theme === 'classic' ? 'theme-classic' : ''}`}>
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm no-print">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between py-3 md:py-4 gap-4">
@@ -263,6 +280,8 @@ const App: React.FC = () => {
               <Calculator
                 items={formulaItems}
                 setItems={setFormulaItems}
+                additives={additiveItems}
+                setAdditives={setAdditiveItems}
                 waterRatio={waterRatio}
                 setWaterRatio={setWaterRatio}
                 oilPrices={oilPrices}
@@ -329,7 +348,6 @@ const App: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {sortedOils.map((oil, index) => {
-                    // 在百科頁面也反應自訂價格
                     const currentPrice = oilPrices[oil.id] || oil.defaultPrice;
                     return (
                       <div
@@ -471,6 +489,7 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
+
           </div>
 
           <div className="lg:col-span-4 space-y-6 md:space-y-8">
