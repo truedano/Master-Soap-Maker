@@ -565,26 +565,6 @@ export const Calculator: React.FC<CalculatorProps> = ({
     const current = calculate(items);
     const baseSuggestWeight = Math.max(50, Math.round(current.totalWeight * 0.1));
 
-    let preview = null;
-    if (hoveredOil) {
-      const previewItems = [...items];
-      if (previewMode === 'replacement' && hoveringSlotIndex !== null) {
-        previewItems[hoveringSlotIndex] = { ...previewItems[hoveringSlotIndex], oilId: hoveredOil.id };
-        if (previewItems[hoveringSlotIndex].weight === 0) previewItems[hoveringSlotIndex].weight = 100;
-      } else {
-        const existingIdx = previewItems.findIndex(i => i.oilId === hoveredOil.id);
-        const weightDelta = previewMode === 'reduction' ? -previewWeightChange : (previewWeightChange || baseSuggestWeight);
-
-        if (existingIdx > -1) {
-          const newWeight = Math.max(0, previewItems[existingIdx].weight + weightDelta);
-          previewItems[existingIdx] = { ...previewItems[existingIdx], weight: newWeight };
-        } else if (weightDelta > 0) {
-          previewItems.push({ oilId: hoveredOil.id, weight: weightDelta });
-        }
-      }
-      preview = calculate(previewItems);
-    }
-
     const lackingKeys = (Object.keys(current.qualities) as Array<keyof OilQualities>).filter(key => {
       return current.totalWeight > 0 && current.qualities[key] < QUALITY_RANGES[key].min;
     });
@@ -635,19 +615,42 @@ export const Calculator: React.FC<CalculatorProps> = ({
     }
 
     return {
+      calculate,
       totalWeight: current.totalWeight,
       avgIns: current.avgIns,
       totalNaoh: Number(current.totalNaoh.toFixed(1)),
       water: Number((current.totalNaoh * waterRatio).toFixed(1)),
       totalCost: Math.round(current.totalCost),
       qualities: current.qualities,
-      previewQualities: preview?.qualities || null,
       suggestions,
       lackingKeys,
       personality,
       baseSuggestWeight
     };
-  }, [items, waterRatio, hoveredOil, previewMode, hoveringSlotIndex, previewWeightChange, oilPrices]);
+  }, [items, waterRatio, oilPrices]);
+
+  const previewResults = useMemo(() => {
+    if (!hoveredOil) return null;
+
+    const previewItems = [...items];
+    const baseSuggestWeight = results.baseSuggestWeight;
+
+    if (previewMode === 'replacement' && hoveringSlotIndex !== null) {
+      previewItems[hoveringSlotIndex] = { ...previewItems[hoveringSlotIndex], oilId: hoveredOil.id };
+      if (previewItems[hoveringSlotIndex].weight === 0) previewItems[hoveringSlotIndex].weight = 100;
+    } else {
+      const existingIdx = previewItems.findIndex(i => i.oilId === hoveredOil.id);
+      const weightDelta = previewMode === 'reduction' ? -previewWeightChange : (previewWeightChange || baseSuggestWeight);
+
+      if (existingIdx > -1) {
+        const newWeight = Math.max(0, previewItems[existingIdx].weight + weightDelta);
+        previewItems[existingIdx] = { ...previewItems[existingIdx], weight: newWeight };
+      } else if (weightDelta > 0) {
+        previewItems.push({ oilId: hoveredOil.id, weight: weightDelta });
+      }
+    }
+    return results.calculate(previewItems);
+  }, [items, hoveredOil, previewMode, hoveringSlotIndex, previewWeightChange, results]);
 
   const applyAdjustment = (oilName: string, weightChange: number, type: 'add' | 'reduce') => {
     const oil = OILS.find(o => o.name.includes(oilName));
@@ -1134,7 +1137,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <h2 className="text-sm font-bold tracking-tight">數據對比 (Radar Chart)</h2>
               </div>
               <div className="p-4 flex flex-col items-center bg-stone-50/30">
-                <RadarChart qualities={results.qualities} previewQualities={results.previewQualities} />
+                <RadarChart qualities={results.qualities} previewQualities={previewResults?.qualities} />
               </div>
             </div>
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 relative">
@@ -1149,7 +1152,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 </h3>
                 <div className="text-right">
                   <Tooltip text="INS 值代表肥皂的軟硬程度，建議範圍在 120-170 之間。">
-                    <div className="flex flex-col items-end cursor-help group/ins">
+                    <div className="flex flex-col items-end cursor-help group/ins min-h-[64px] justify-center">
                       <p className="text-[10px] font-black text-stone-400 uppercase mb-1 flex items-center gap-1 group-hover/ins:theme-text-primary transition-colors">
                         配方總 INS 值 <Info className="w-3 h-3" />
                       </p>
@@ -1159,11 +1162,18 @@ export const Calculator: React.FC<CalculatorProps> = ({
                             {results.avgIns < 120 ? <AlertCircle className="w-5 h-5" /> : results.avgIns > 170 ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
                           </div>
                         )}
-                        <NumberTicker
-                          value={results.avgIns}
-                          precision={1}
-                          className={`text-5xl font-black tabular-nums tracking-tighter ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}
-                        />
+                        <div className="relative">
+                          <NumberTicker
+                            value={results.avgIns}
+                            precision={1}
+                            className={`text-5xl font-black tabular-nums tracking-tighter ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}
+                          />
+                          {previewResults?.avgIns !== undefined && previewResults.avgIns !== results.avgIns && (
+                            <div className={`absolute -bottom-4 right-0 text-[10px] font-black animate-pulse whitespace-nowrap ${previewResults.avgIns > results.avgIns ? 'text-green-500' : 'text-red-500'}`}>
+                              預估: {previewResults.avgIns > results.avgIns ? '↑' : '↓'} {previewResults.avgIns}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Tooltip>
@@ -1175,7 +1185,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   const ui = QUALITY_UI[key];
                   const range = QUALITY_RANGES[key];
                   const val = results.qualities[key];
-                  const previewVal = results.previewQualities ? results.previewQualities[key] : null;
+                  const previewVal = previewResults?.qualities ? previewResults.qualities[key] : null;
                   const status = getIndicatorStatus(val, range);
                   const statusUI = getStatusUI(status);
 
@@ -1196,7 +1206,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                           <p className="text-[10px] font-bold text-stone-400 ml-8">建議區間：{range.min} ~ {range.max}</p>
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-right h-12 flex flex-col justify-center">
                           <div className="flex items-center justify-end gap-2">
                             <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border flex items-center gap-1 ${statusUI.color.replace('text-', 'border-').replace('text-', 'bg-')}/5 ${statusUI.color} ${status !== 'ideal' && status !== 'none' ? 'animate-pulse' : ''}`}>
                               {statusUI.icon}
@@ -1207,11 +1217,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
                               className={`text-2xl font-black tabular-nums ${statusUI.color}`}
                             />
                           </div>
-                          {previewVal !== null && previewVal !== val && (
-                            <div className={`text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
-                              預估變動: {previewVal > val ? '↑' : '↓'} {previewVal}
-                            </div>
-                          )}
+                          <div className="h-4 relative">
+                            {previewVal !== null && previewVal !== val && (
+                              <div className={`absolute right-0 top-0 text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
+                                預估變動: {previewVal > val ? '↑' : '↓'} {previewVal}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -1235,7 +1247,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
               </div>
             </div>
 
-            <div className="bg-stone-900 p-8 rounded-3xl shadow-2xl text-white relative overflow-hidden">
+            <div className="bg-stone-900 p-8 rounded-3xl shadow-2xl text-white relative min-h-[200px]">
               <div className="absolute -right-10 -top-10 opacity-5">
                 <ZapIcon className="w-40 h-40" />
               </div>
@@ -1245,15 +1257,15 @@ export const Calculator: React.FC<CalculatorProps> = ({
               {results.suggestions.length > 0 ? (
                 <div className="space-y-4 relative z-10">
                   {results.suggestions.map((s, i) => (
-                    <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                    <div key={`s-${s.qualityKey}-${i}`} className="p-4 bg-white/5 rounded-2xl border border-white/10">
                       <p className={`text-sm font-black mb-3 ${s.text.includes('過高') || s.text.includes('太強') ? 'text-rose-400' : 'text-orange-400'}`}>{s.text}</p>
                       <div className="flex flex-wrap gap-2">
-                        {s.actions.map((action, idx) => {
+                        {s.actions.map((action) => {
                           const oilObj = OILS.find(o => o.name.includes(action.name));
                           const isReduce = action.type === 'reduce';
                           return (
                             <button
-                              key={idx}
+                              key={`${action.name}-${action.type}`}
                               onMouseEnter={() => {
                                 if (oilObj) {
                                   setHoveredOil(oilObj);
