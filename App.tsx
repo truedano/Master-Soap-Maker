@@ -193,6 +193,9 @@ const App: React.FC = () => {
                 </div>
                 <h1 className="text-lg md:text-2xl font-black text-stone-800 tracking-tight">
                   手工皂<span className="text-amber-600 theme-text-primary">製作大師</span>
+                  <span className="ml-2 text-[10px] text-stone-400 font-bold bg-stone-100 px-1.5 py-0.5 rounded-full align-middle md:inline-block hidden">
+                    v{(import.meta.env as any).PACKAGE_VERSION}
+                  </span>
                 </h1>
               </div>
 

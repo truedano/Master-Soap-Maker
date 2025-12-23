@@ -1,20 +1,83 @@
+# 手工皂製作大師 (Master Soap Maker)
+
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+  <h3>專業級手工皂配方計算與製作輔助工具</h3>
+  <p>專為手工皂愛好者打造的現代化 Web 應用程式，提供精確的配方計算、即時成本估算與完整的製作指南。</p>
 </div>
 
-# Run and deploy your AI Studio app
+---
 
-This contains everything you need to run your app locally.
+## ✨ 核心功能 (Features)
 
-View your app in AI Studio: https://ai.studio/apps/drive/1dyb2-llZu7d5ZzQq7XgpxqvrjUynm-x0
+### 1. 🧪 專業配方計算 (Smart Calculator)
+- **即時數值分析**：自動計算 INS 值、NaOH 用量、水量及總油脂重。
+- **五力分析雷達圖**：視覺化呈現配方的清潔力、起泡力、硬度、保濕度與穩定度。
+- **專家建議系統**：若配方數值超出建議範圍，系統會自動提供補救建議（如增加椰子油以提升硬度）。
+- **雙重輸入模式**：支援「重量 (g)」與「比例 (%)」兩種輸入方式，滿足不同習慣。
 
-## Run Locally
+### 2. 📚 油脂百科 (Oil Encyclopedia)
+- **詳細資料庫**：收錄數十種常用油脂的詳細特性（皂化價、INS、脂肪酸組成等）。
+- **五力排行**：可根據硬度、清潔力等指標對油脂進行排序，快速找到合適的油品。
+- **自訂價格**：支援設定油脂單價，系統會自動記憶並用於成本估算。
 
-**Prerequisites:**  Node.js
+### 3. 💰 成本估算 (Cost Estimation)
+- **即時報價**：根據配方用量與自訂單價，即時計算總成本與每 100g 成本。
+- **預算分佈圖**：視覺化呈現各項油品的成本佔比，協助精確控制預算。
 
+### 4. 📝 製作流程導引 (Production Guide)
+- **逐步教學**：從溶鹼、融油到入模的完整步驟教學。
+- **打皂製作單**：提供專注模式的「製作單 Overlay」，列出精確稱重清單與步驟勾選功能。
+- **安全提醒**：內建安全警語與注意事項，確保製作過程安全無虞。
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 5. 📂 配方管理 (Recipe Management)
+- **本地儲存**：所有配方皆儲存在瀏覽器本地端 (LocalStorage)，隱私安全且支援離線使用。
+- **一鍵列印**：支援輸出精美的 PDF 配方報告，方便存檔或分享。
+- **懶人包**：內建多款經典配方（如 72% 馬賽皂、家事皂），新手也能輕鬆開始。
+
+---
+
+## 🛠️ 技術堆疊 (Tech Stack)
+
+- **Framework**: React 18
+- **Build Tool**: Vite
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+
+---
+
+## 🚀 快速開始 (Quick Start)
+
+### 前置需求
+確保您的電腦已安裝 [Node.js](https://nodejs.org/) (建議 v16 以上)。
+
+### 1. 安裝依賴
+```bash
+npm install
+```
+
+### 2. 啟動開發伺服器
+```bash
+npm run dev
+```
+打開瀏覽器訪問 `http://localhost:3000` 即可開始使用。
+
+### 3. 建置生產版本
+```bash
+npm run build
+```
+
+---
+
+## ⚠️ 免責聲明
+
+本應用程式僅供教學與輔助計算參考。手工皂製作涉及化學反應（強鹼），請務必：
+1. 全程佩戴防護裝備（護目鏡、手套、口罩）。
+2. 於通風良好處操作。
+3. 嚴格遵守「鹼入水」的安全順序。
+
+---
+
+<div align="center">
+  <p>Made with ❤️ by Master Soap Maker Team</p>
+</div>
