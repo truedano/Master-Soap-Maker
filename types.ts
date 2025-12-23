@@ -39,5 +39,6 @@ export interface SavedFormula {
   id: string;
   name: string;
   items: FormulaItem[];
+  waterRatio?: number;
   date: number;
 }

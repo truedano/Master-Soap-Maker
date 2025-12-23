@@ -36,6 +36,7 @@ const STORAGE_KEY_PRICES = 'soap_master_oil_prices';
 const STORAGE_KEY_FORMULA = 'soap_master_formula';
 const STORAGE_KEY_SAVED_RECIPES = 'soap_master_saved_recipes';
 const STORAGE_KEY_THEME = 'soap_master_theme';
+const STORAGE_KEY_WATER_RATIO = 'soap_master_water_ratio';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
@@ -98,6 +99,12 @@ const App: React.FC = () => {
     return [];
   });
 
+  // 管理預設水量倍數
+  const [waterRatio, setWaterRatio] = useState<number>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_WATER_RATIO);
+    return saved ? parseFloat(saved) : 2.3;
+  });
+
   // 當價格改變時，同步到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
@@ -112,6 +119,11 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_SAVED_RECIPES, JSON.stringify(savedRecipes));
   }, [savedRecipes]);
+
+  // 當水量倍數改變時，同步到 localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_WATER_RATIO, waterRatio.toString());
+  }, [waterRatio]);
 
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
@@ -152,6 +164,7 @@ const App: React.FC = () => {
       id: Date.now().toString(),
       name,
       items: [...formulaItems],
+      waterRatio,
       date: Date.now()
     };
     setSavedRecipes(prev => [newRecipe, ...prev]);
@@ -163,6 +176,9 @@ const App: React.FC = () => {
 
   const handleLoadRecipe = (recipe: SavedFormula) => {
     setFormulaItems(recipe.items);
+    if (recipe.waterRatio) {
+      setWaterRatio(recipe.waterRatio);
+    }
   };
 
   return (
@@ -242,6 +258,8 @@ const App: React.FC = () => {
               <Calculator
                 items={formulaItems}
                 setItems={setFormulaItems}
+                waterRatio={waterRatio}
+                setWaterRatio={setWaterRatio}
                 oilPrices={oilPrices}
                 onSetPrice={handleSetPrice}
                 savedRecipes={savedRecipes}

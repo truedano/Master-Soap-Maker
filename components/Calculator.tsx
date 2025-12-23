@@ -491,6 +491,8 @@ const CustomOilSelect: React.FC<{
 interface CalculatorProps {
   items: FormulaItem[];
   setItems: React.Dispatch<React.SetStateAction<FormulaItem[]>>;
+  waterRatio: number;
+  setWaterRatio: (ratio: number) => void;
   oilPrices: Record<string, number>;
   onSetPrice: (id: string, price: number) => void;
   onFindOil: (quality: string) => void;
@@ -503,6 +505,8 @@ interface CalculatorProps {
 export const Calculator: React.FC<CalculatorProps> = ({
   items,
   setItems,
+  waterRatio,
+  setWaterRatio,
   oilPrices,
   onSetPrice,
   onFindOil,
@@ -511,7 +515,6 @@ export const Calculator: React.FC<CalculatorProps> = ({
   onLoadRecipe,
   onDeleteRecipe
 }) => {
-  const [waterRatio, setWaterRatio] = useState<number>(2.3);
   const [showCost, setShowCost] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [recipeName, setRecipeName] = useState('');
@@ -1077,8 +1080,22 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       <span>NaOH 需求量</span>
                       <NumberTicker value={results.totalNaoh} precision={1} suffix=" g" className="font-black" />
                     </div>
-                    <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100">
-                      <span>水量 (2.3倍)</span>
+                    <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100 flex-wrap gap-y-2">
+                      <div className="flex items-center gap-2">
+                        <span>水量要求</span>
+                        <div className="flex items-center bg-white rounded-lg border border-blue-200 px-2 py-0.5">
+                          <input
+                            type="number"
+                            value={waterRatio}
+                            step="0.1"
+                            min="1"
+                            max="5"
+                            onChange={(e) => setWaterRatio(Number(e.target.value))}
+                            className="w-10 bg-transparent outline-none text-center font-black text-xs p-0"
+                          />
+                          <span className="text-[10px] text-blue-400 opacity-60">倍</span>
+                        </div>
+                      </div>
                       <NumberTicker value={results.water} precision={1} suffix=" g" className="font-black" />
                     </div>
                   </div>
