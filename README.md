@@ -1,8 +1,14 @@
 # 手工皂製作大師 (Master Soap Maker)
 
 <div align="center">
+  <img src="public/soap_favicon.png" width="80" height="80" alt="Logo" />
   <h3>專業級手工皂配方計算與製作輔助工具</h3>
   <p>專為手工皂愛好者打造的現代化 Web 應用程式，提供精確的配方計算、即時成本估算與完整的製作指南。</p>
+  <p>
+    <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version 1.0.0" />
+    <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License" />
+    <img src="https://img.shields.io/badge/built%20with-React%20%2B%20Vite-61DAFB.svg" alt="Built with React" />
+  </p>
 </div>
 
 ---
@@ -43,13 +49,14 @@
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
+- **Deployment**: GitHub Actions (GH Pages)
 
 ---
 
 ## 🚀 快速開始 (Quick Start)
 
 ### 前置需求
-確保您的電腦已安裝 [Node.js](https://nodejs.org/) (建議 v16 以上)。
+確保您的電腦已安裝 [Node.js](https://nodejs.org/) (建議 v18 以上)。
 
 ### 1. 安裝依賴
 ```bash
@@ -66,6 +73,16 @@ npm run dev
 ```bash
 npm run build
 ```
+
+---
+
+## 📦 部署指南 (Deployment)
+
+本專案已配置 GitHub Actions 自動化部署。
+
+1. **推送代碼**：將代碼推送到 GitHub `main` 分支。
+2. **自動部署**：如果是首次部署，請至 Repository Settings > Pages > Source 選擇 "GitHub Actions"。
+3. **查看狀態**：在 Actions 頁籤查看部署進度。
 
 ---
 
