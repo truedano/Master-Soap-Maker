@@ -357,25 +357,26 @@ export const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
   ];
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1 px-1">
-        <span>五力分布 (Contribution)</span>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">
+        <span>五力數值 (Quality Metrics)</span>
       </div>
-      <div className="flex gap-0.5 h-2 bg-stone-100 rounded-full overflow-hidden shadow-inner p-[1px]">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-3">
         {qualities.map(q => (
-          <div
-            key={q.key}
-            className={`${q.bg} h-full rounded-sm transition-all duration-500`}
-            style={{ width: `${Math.max(2, (q.val / 100) * 100)}%` }}
-            title={`${q.label}: ${q.val}`}
-          />
-        ))}
-      </div>
-      <div className="grid grid-cols-5 gap-0.5 mt-1">
-        {qualities.map(q => (
-          <div key={q.key} className="flex flex-col items-center">
-            <div className={`w-1 h-1 rounded-full ${q.bg} mb-0.5`} />
-            <span className="text-[8px] font-black text-stone-400 scale-90">{q.val}</span>
+          <div key={q.key} className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <QualityIcon name={q.icon} size={13} color={q.color} />
+                <span className="text-xs font-bold text-stone-600">{q.label}</span>
+              </div>
+              <span className="text-xs font-black text-stone-800 tabular-nums">{q.val}</span>
+            </div>
+            <div className="h-1.5 w-full bg-stone-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full ${q.bg}`}
+                style={{ width: `${Math.min(100, Math.max(5, q.val))}%` }}
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -405,7 +406,7 @@ const CustomOilSelect: React.FC<{
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onHover]);
 
-  const getOilTags = (oil: OilData) => {
+  const renderQualityBadges = (oil: OilData) => {
     const qualities = [
       { key: 'hardness', ...QUALITY_UI.hardness, val: oil.hardness },
       { key: 'cleansing', ...QUALITY_UI.cleansing, val: oil.cleansing },
@@ -413,36 +414,46 @@ const CustomOilSelect: React.FC<{
       { key: 'bubbly', ...QUALITY_UI.bubbly, val: oil.bubbly },
       { key: 'creamy', ...QUALITY_UI.creamy, val: oil.creamy },
     ];
-    const topTags = qualities.sort((a, b) => b.val - a.val).slice(0, 2);
-    const isRecommended = lackingKeys.some(key => oil[key as keyof OilQualities] >= 45);
-    return { topTags, isRecommended };
+
+    return (
+      <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+        {qualities.map(q => (
+          <div
+            key={q.key}
+            className={`flex items-center gap-1 px-1.5 py-0.5 rounded border ${q.val > 0 ? 'bg-white border-stone-200' : 'bg-stone-50 border-transparent opacity-40'}`}
+            title={q.label}
+          >
+            <QualityIcon name={q.icon} size={10} color={q.color} />
+            <span className={`text-[10px] font-bold tabular-nums ${q.val > 0 ? 'text-stone-700' : 'text-stone-400'}`}>
+              {q.val}
+            </span>
+          </div>
+        ))}
+        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-stone-200 bg-stone-100 ml-auto">
+          <span className="text-[10px] font-black text-stone-500">INS</span>
+          <span className="text-[10px] font-bold text-stone-700">{oil.ins}</span>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="relative w-full" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-3.5 bg-white border border-stone-200 rounded-xl flex items-center justify-between outline-none focus:ring-4 focus:ring-amber-500/20 text-stone-700 font-bold transition-all shadow-sm"
+        className="w-full p-3 bg-white border border-stone-200 rounded-xl flex flex-col outline-none focus:ring-4 focus:ring-amber-500/20 text-stone-700 font-bold transition-all shadow-sm hover:border-amber-300"
       >
-        <div className="truncate flex items-center gap-2">
-          <span className="truncate">{selectedOil?.name}</span>
-          {selectedOil && (
-            <div className="hidden sm:flex gap-1 ml-1 flex-shrink-0">
-              {getOilTags(selectedOil).topTags.map(tag => (
-                <span key={tag.key} className="text-[9px] px-1.5 py-0.5 rounded-sm bg-stone-100 text-stone-500 font-black">
-                  {tag.label.slice(0, 2)}
-                </span>
-              ))}
-            </div>
-          )}
+        <div className="flex items-center justify-between w-full">
+          <span className="truncate">{selectedOil?.name || '選擇油脂'}</span>
+          <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
-        <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+        {selectedOil && renderQualityBadges(selectedOil)}
       </button>
 
       {isOpen && (
         <div className="absolute z-50 mt-2 w-full max-h-[350px] bg-white border border-stone-100 rounded-2xl shadow-2xl overflow-y-auto no-scrollbar animate-fade-in">
           {OILS.map((oil) => {
-            const { topTags, isRecommended } = getOilTags(oil);
+            const isRecommended = lackingKeys.some(key => oil[key as keyof OilQualities] >= 45);
             return (
               <div
                 key={oil.id}
@@ -453,33 +464,23 @@ const CustomOilSelect: React.FC<{
                   setIsOpen(false);
                   onHover(null);
                 }}
-                className={`flex items-center justify-between p-4 cursor-pointer transition-all border-b border-stone-50 last:border-none ${value === oil.id ? 'bg-amber-50' : 'hover:bg-stone-50'
+                className={`flex flex-col p-3 cursor-pointer transition-all border-b border-stone-50 last:border-none ${value === oil.id ? 'bg-amber-50' : 'hover:bg-stone-50'
                   } ${isRecommended ? 'bg-amber-50/10' : ''}`}
               >
-                <div className="flex flex-col gap-1 min-w-0 flex-1">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {isRecommended && (
                       <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm flex items-center gap-1 shadow-sm">
-                        ✨ 推薦補位
+                        ✨ 推薦
                       </span>
                     )}
                     <span className={`text-sm font-bold truncate ${isRecommended ? 'text-amber-900 font-black' : 'text-stone-700'}`}>
                       {oil.name}
                     </span>
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1 flex-shrink-0">
-                      {topTags.map(tag => (
-                        <span key={tag.key} className={`text-[8px] font-black px-1.5 py-0.5 rounded-sm text-white ${tag.bg}`}>
-                          {tag.label.slice(0, 2)}
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-stone-400 font-bold border-l border-stone-100 pl-2">INS: {oil.ins}</span>
-                  </div>
+                  {value === oil.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
                 </div>
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 ml-4 ${value === oil.id ? 'theme-bg-primary' : 'bg-transparent'}`} />
+                {renderQualityBadges(oil)}
               </div>
             );
           })}
