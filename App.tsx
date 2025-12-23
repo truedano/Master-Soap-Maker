@@ -183,7 +183,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-12 bg-[#fcfaf7]">
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-100 shadow-sm no-print">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between py-3 md:py-4 gap-4">
             <div className="flex items-center gap-4">
@@ -249,7 +249,9 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-10">
-        <SafetyAlert />
+        <div className="no-print">
+          <SafetyAlert />
+        </div>
 
         <div id="main-content" className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
           <div className="lg:col-span-8 space-y-8 md:space-y-12">
@@ -504,12 +506,12 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="max-w-7xl mx-auto border-t border-stone-100 py-12 px-6 text-center mt-12 opacity-60 pb-32 md:pb-12">
+      <footer className="max-w-7xl mx-auto border-t border-stone-100 py-12 px-6 text-center mt-12 opacity-60 pb-32 md:pb-12 no-print">
         <p className="text-stone-400 text-xs italic">本站僅供教學與輔助計算參考。進行化學反應時，請務必佩戴防護裝備。</p>
       </footer>
 
       {/* 行動裝置底部導航 */}
-      <div className="fixed bottom-0 left-0 right-0 z-[100] md:hidden bg-white/90 backdrop-blur-lg border-t border-stone-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-4 pb-safe">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] md:hidden bg-white/90 backdrop-blur-lg border-t border-stone-100 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-4 pb-safe no-print">
         <div className="flex items-center justify-around h-20">
           <button
             onClick={() => setActiveTab(SectionType.CALCULATOR)}

@@ -92,6 +92,61 @@
     .soap-texture {
       background-image: url("https://www.transparenttextures.com/patterns/handmade-paper.png");
     }
+
+    @media print {
+
+      /* 隱藏所有非列印元件 */
+      .no-print,
+      header,
+      nav,
+      footer,
+      button:not(.print-include),
+      .fixed,
+      .sticky {
+        display: none !important;
+      }
+
+      @page {
+        size: A4;
+        margin: 1cm;
+        /* 清除瀏覽器預設的網址與日期 */
+      }
+
+      body {
+        background: white !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+
+      #root {
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+      }
+
+      .print-only {
+        display: block !important;
+        visibility: visible !important;
+      }
+
+      /* 禁止列印時截斷內容，確保美觀 */
+      .print-card {
+        page-break-inside: avoid;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+    }
+
+    .print-only {
+      display: none;
+    }
   </style>
   <script type="importmap">
 {
