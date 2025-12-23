@@ -959,7 +959,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <div className="flex flex-col items-center justify-center py-16 px-6 bg-white/50 rounded-[3rem] border-2 border-dashed border-stone-200 animate-fade-in text-center soap-texture">
                   <div className="relative mb-6">
                     <div className="absolute -inset-4 theme-bg-light rounded-full blur-2xl animate-pulse" />
-                    <img src="/soap_empty.png" alt="Happy Soap" className="w-48 h-48 object-contain relative z-10 drop-shadow-xl" />
+                    <img src="soap_empty.png" alt="Happy Soap" className="w-48 h-48 object-contain relative z-10 drop-shadow-xl" />
                   </div>
                   <h3 className="text-2xl font-black text-stone-800 mb-2 tracking-tight">開始調配您的第一塊完美手工皂吧！</h3>
                   <p className="text-stone-400 font-bold max-w-xs leading-relaxed mb-8">

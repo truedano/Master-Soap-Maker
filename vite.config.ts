@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
   const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
   return {
+    base: './',
     server: {
       port: 3000,
       host: '0.0.0.0',
