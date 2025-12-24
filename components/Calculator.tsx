@@ -995,82 +995,86 @@ export const Calculator: React.FC<CalculatorProps> = ({
       <div className="space-y-8 animate-fade-in no-print">
         {/* 1. 配方組成 */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
-          <div className="bg-[#2d2926] p-4 md:p-5 text-white flex items-center justify-between">
+          <div className="bg-[#2d2926] p-4 md:p-6 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="bg-amber-500/20 p-1.5 rounded flex items-center justify-center">
+              <div className="bg-amber-500/20 p-2 rounded-xl flex items-center justify-center shrink-0">
                 <CalcIcon className="w-5 h-5 text-amber-500" />
               </div>
-              <div className="flex flex-col">
-                <h2 className="text-xl font-bold tracking-tight leading-none">1. 配方組成 (Recipe)</h2>
-                <div className="flex items-center gap-2 mt-1">
+              <div className="flex flex-col min-w-0">
+                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-none truncate">1. 配方組成 <span className="text-stone-500 font-bold ml-1 hidden sm:inline">(Recipe)</span></h2>
+                <div className="flex items-center gap-2 mt-1.5">
                   <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest shrink-0">目前名稱:</span>
                   <input
                     type="text"
                     placeholder="點擊輸入配方名稱..."
                     value={recipeName}
                     onChange={(e) => setRecipeName(e.target.value)}
-                    className="bg-transparent border-none text-amber-400 text-sm font-black p-0 outline-none focus:ring-0 placeholder:text-stone-600 w-48 truncate"
+                    className="bg-transparent border-none text-amber-400 text-sm font-black p-0 outline-none focus:ring-0 placeholder:text-stone-600 w-full sm:w-48 truncate"
                   />
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex bg-white/10 p-1 rounded-lg border border-white/20">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:justify-end">
+              <div className="flex bg-white/10 p-1 rounded-lg border border-white/20 shrink-0">
                 <button
                   onClick={() => setInputMode('weight')}
-                  className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'weight' ? 'bg-amber-500 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
+                  className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'weight' ? 'bg-amber-500 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
                 >
                   克 (g)
                 </button>
                 <button
                   onClick={() => setInputMode('percent')}
-                  className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'percent' ? 'theme-bg-primary text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
+                  className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'percent' ? 'theme-bg-primary text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
                 >
                   比例 (%)
                 </button>
               </div>
               <button
                 onClick={() => setShowPresets(!showPresets)}
-                className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showPresets ? 'theme-bg-primary text-white border-transparent shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showPresets ? 'theme-bg-primary text-white border-transparent shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
                   }`}
               >
-                <LayoutGrid className="w-3 h-3" />
+                <LayoutGrid className="w-3.5 h-3.5" />
                 懶人包
               </button>
               <button
                 onClick={() => setShowLibrary(!showLibrary)}
-                className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showLibrary ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showLibrary ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
                   }`}
               >
-                <FolderOpen className="w-3 h-3" />
-                配方庫 ({savedRecipes.length})
+                <FolderOpen className="w-3.5 h-3.5" />
+                配方庫{savedRecipes.length > 0 ? ` (${savedRecipes.length})` : ''}
               </button>
               <button
                 onClick={() => setShowCost(!showCost)}
-                className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showCost ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 ${showCost ? 'bg-amber-500 text-white border-amber-600 shadow-sm' : 'bg-white/10 text-stone-400 border-white/20 hover:bg-white/20'
                   }`}
               >
-                <DollarSign className="w-3 h-3" />
-                成本模式: {showCost ? 'ON' : 'OFF'}
+                <DollarSign className="w-3.5 h-3.5" />
+                成本模式
               </button>
               <button
                 onClick={() => setShowProduction(true)}
-                className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-full border border-blue-700 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-100"
+                className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-full border border-blue-700 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-500/20"
               >
-                <FileText className="w-3 h-3" />
-                開始製作 (Production)
+                <FileText className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">開始製作</span>
+                <span className="sm:hidden">製作</span>
               </button>
               <button
                 onClick={() => window.print()}
-                className="flex items-center gap-2 px-3 py-1 bg-white text-stone-700 rounded-full border border-stone-200 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 active:scale-95 shadow-sm"
+                className="flex items-center gap-2 px-3 py-1.5 bg-white text-stone-700 rounded-full border border-stone-200 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 active:scale-95 shadow-sm"
               >
-                <Printer className="w-3 h-3" />
-                輸出 PDF / 列印
+                <Printer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">輸出 PDF / 列印</span>
+                <span className="sm:hidden">列印</span>
               </button>
               {results.totalWeight > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/20">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full border border-white/20">
                   <Activity className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">配方導向：{results.personality}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 truncate max-w-[120px]">
+                    {results.personality}
+                  </span>
                 </div>
               )}
             </div>
