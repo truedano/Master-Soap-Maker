@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ReactGA from 'react-ga4';
 import { SafetyAlert } from './components/SafetyAlert';
 import { Calculator, MiniQualityBars } from './components/Calculator';
 import { FAQS, OILS, QUALITY_UI } from './constants';
@@ -52,6 +53,12 @@ const App: React.FC = () => {
     body.classList.remove('theme-natural', 'theme-minimal');
     if (theme === 'natural') body.classList.add('theme-natural');
     else if (theme === 'minimal') body.classList.add('theme-minimal');
+
+    ReactGA.event({
+      category: "User_Interface",
+      action: "Change_Theme",
+      label: theme
+    });
   }, [theme]);
 
   // 提升配方狀態 - 從 localStorage 恢復
@@ -145,6 +152,12 @@ const App: React.FC = () => {
     if (mainContent) {
       window.scrollTo({ top: mainContent.offsetTop - 80, behavior: 'smooth' });
     }
+
+    ReactGA.event({
+      category: "Navigation",
+      action: "Switch_Tab",
+      label: activeTab
+    });
   }, [activeTab]);
 
   const sortedOils = useMemo(() => {
@@ -154,6 +167,14 @@ const App: React.FC = () => {
         o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         o.description.includes(searchTerm)
       );
+
+      // 追蹤搜尋行為 (使用 debounce 概念，或者簡單追蹤)
+      // 這裡簡單記錄，實際上可能需要防抖
+      ReactGA.event({
+        category: "Engagement",
+        action: "Search_Oil_Encyclopedia",
+        label: searchTerm
+      });
     }
     if (sortBy !== 'none') {
       result.sort((a, b) => (b[sortBy] as number) - (a[sortBy] as number));
@@ -168,6 +189,12 @@ const App: React.FC = () => {
       return [...prev, { oilId, weight: 100 }];
     });
     setActiveTab(SectionType.CALCULATOR);
+
+    ReactGA.event({
+      category: "Formula",
+      action: "Add_Oil",
+      label: oilId
+    });
   };
 
   const handleSetPrice = (oilId: string, price: number) => {
@@ -184,10 +211,22 @@ const App: React.FC = () => {
       date: Date.now()
     };
     setSavedRecipes(prev => [newRecipe, ...prev]);
+
+    ReactGA.event({
+      category: "Formula",
+      action: "Save_Recipe",
+      label: name
+    });
   };
 
   const handleDeleteRecipe = (id: string) => {
     setSavedRecipes(prev => prev.filter(r => r.id !== id));
+
+    ReactGA.event({
+      category: "Formula",
+      action: "Delete_Recipe",
+      label: id
+    });
   };
 
   const handleLoadRecipe = (recipe: SavedFormula) => {
@@ -196,6 +235,12 @@ const App: React.FC = () => {
     if (recipe.waterRatio) {
       setWaterRatio(recipe.waterRatio);
     }
+
+    ReactGA.event({
+      category: "Formula",
+      action: "Load_Recipe",
+      label: recipe.name
+    });
   };
 
   return (

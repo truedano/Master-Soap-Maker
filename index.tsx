@@ -1,7 +1,11 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import ReactGA from 'react-ga4';
 import App from './App';
+
+ReactGA.initialize('G-0Z99SFVYKP');
+ReactGA.send('pageview');
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import ReactGA from 'react-ga4';
 import html2pdf from 'html2pdf.js';
 import { OILS, QUALITY_RANGES, QUALITY_UI, PRESETS } from '../constants';
 import { FormulaItem, OilQualities, OilData, SavedFormula, AdditiveItem } from '../types';
@@ -825,7 +826,17 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [inputMode, setInputMode] = useState<'weight' | 'percent'>('weight');
   const [showPresets, setShowPresets] = useState(false);
-  const [showProduction, setShowProduction] = useState(false);
+  const [showProductionMode, setShowProductionMode] = useState(false); // Renamed from showProduction
+
+  useEffect(() => {
+    if (showProductionMode) {
+      ReactGA.event({
+        category: "Engagement",
+        action: "Enter_Production_Mode",
+        label: "Step_by_step_Guide"
+      });
+    }
+  }, [showProductionMode]);
 
   const [hoveredOil, setHoveredOil] = useState<OilData | null>(null);
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
@@ -1110,6 +1121,11 @@ export const Calculator: React.FC<CalculatorProps> = ({
       .save()
       .then(() => {
         setIsDownloading(false);
+        ReactGA.event({
+          category: "Export",
+          action: "Download_PDF",
+          label: "Recipe_PDF"
+        });
       })
       .catch((err: any) => {
         console.error('PDF Generation Error:', err);
@@ -1224,7 +1240,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 成本模式
               </button>
               <button
-                onClick={() => setShowProduction(true)}
+                onClick={() => setShowProductionMode(true)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-full border border-blue-700 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-500/20"
               >
                 <FileText className="w-3.5 h-3.5" />
@@ -1265,6 +1281,11 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   onClick={() => {
                     setItems(preset.items);
                     setShowPresets(false);
+                    ReactGA.event({
+                      category: "Formula",
+                      action: "Load_Preset",
+                      label: preset.name
+                    });
                   }}
                   className="p-4 bg-white border border-stone-200 rounded-2xl text-left hover:theme-border-primary hover:shadow-md transition-all group"
                 >
@@ -1942,11 +1963,11 @@ export const Calculator: React.FC<CalculatorProps> = ({
         </div>
 
         {/* 製作模式 Overlay */}
-        {showProduction && (
+        {showProductionMode && (
           <ProductionMode
             items={items}
             results={results}
-            onClose={() => setShowProduction(false)}
+            onClose={() => setShowProductionMode(false)}
           />
         )}
       </div>
