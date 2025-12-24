@@ -5,11 +5,37 @@
   <h3>專業級手工皂配方計算與製作輔助工具</h3>
   <p>專為手工皂愛好者打造的現代化 Web 應用程式，提供精確的配方計算、即時成本估算與完整的製作指南。</p>
   <p>
-    <img src="https://img.shields.io/badge/version-1.0.1-blue.svg" alt="Version 1.0.1" />
+    <img src="https://img.shields.io/badge/version-1.0.2-blue.svg" alt="Version 1.0.2" />
     <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License" />
     <img src="https://img.shields.io/badge/built%20with-React%20%2B%20Vite-61DAFB.svg" alt="Built with React" />
   </p>
 </div>
+
+---
+
+## 📈 更新日誌 (Changelog)
+
+### v1.0.2 (2024-12-24)
+- **📱 行動裝置 UI 優化**：
+  - 修正手機版配方計算機標題列按鈕溢出被切掉的問題。
+  - 實作響應式標題佈局，在窄螢幕下自動切換為垂直堆疊 (`flex-col`)。
+  - 優化按鈕文字在行動裝置上的顯示（自動縮減為簡短版）。
+  - 增加觸控點擊空間與排版層次感。
+
+### v1.0.1 (2024-12-23)
+- **✨ 核心功能強化**：
+  - 新增「創意添加物 (Additives)」管理功能。
+  - 實作精油安全濃度警告系統。
+  - 支援自訂水量倍數調整。
+  - 優化 PDF 輸出報告版面。
+  - 更新 README 與版本號規範。
+
+### v1.0.0
+- **🎉 初始版本發佈**：
+  - 核心配方計算功能。
+  - 五力分析雷達圖。
+  - 油脂百科。
+  - 主題切換。
 
 ---
 
