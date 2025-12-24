@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import html2pdf from 'html2pdf.js';
 import { OILS, QUALITY_RANGES, QUALITY_UI, PRESETS } from '../constants';
 import { FormulaItem, OilQualities, OilData, SavedFormula, AdditiveItem } from '../types';
 import { NumberTicker } from './NumberTicker';
@@ -543,7 +544,7 @@ const RecipePrintCard: React.FC<{
   const date = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
 
   return (
-    <div className="print-only print-card p-4 bg-white text-stone-900 font-sans">
+    <div className="print-card p-8 bg-white text-stone-900 font-sans">
       {/* Header */}
       <div className="flex justify-between items-start border-b-4 border-stone-800 pb-8 mb-8">
         <div>
@@ -741,6 +742,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const [previewMode, setPreviewMode] = useState<'replacement' | 'addition' | 'reduction' | null>(null);
   const [hoveringSlotIndex, setHoveringSlotIndex] = useState<number | null>(null);
   const [previewWeightChange, setPreviewWeightChange] = useState<number>(0);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => {
     const calculate = (formulaItems: FormulaItem[], currentAdditives: AdditiveItem[] = []) => {
@@ -984,14 +987,63 @@ export const Calculator: React.FC<CalculatorProps> = ({
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!printRef.current) return;
+    setIsDownloading(true);
+
+    const element = printRef.current;
+    const fileName = `手工皂配方_${recipeName || '未命名'}.pdf`;
+
+    const opt = {
+      margin: 10,
+      filename: fileName,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        logging: false
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+    };
+
+    // 觸發下載
+    html2pdf()
+      .set(opt)
+      .from(element)
+      .save()
+      .then(() => {
+        setIsDownloading(false);
+      })
+      .catch((err: any) => {
+        console.error('PDF Generation Error:', err);
+        setIsDownloading(false);
+      });
+  };
+
   return (
     <div className="calculator-container">
-      <RecipePrintCard
-        name={recipeName}
-        items={items}
-        results={results}
-        waterRatio={waterRatio}
-      />
+      {/* PDF 隱藏渲染區域：保持在 DOM 中但位移到可視範圍外，確保 html2canvas 能抓到樣式 */}
+      <div className="fixed -left-[9999px] top-0 w-[800px]" aria-hidden="true">
+        <div ref={printRef}>
+          <RecipePrintCard
+            name={recipeName}
+            items={items}
+            results={results}
+            waterRatio={waterRatio}
+          />
+        </div>
+      </div>
+
+      {/* 原本的列印區域（供 window.print 使用） */}
+      <div className="print-only">
+        <RecipePrintCard
+          name={recipeName}
+          items={items}
+          results={results}
+          waterRatio={waterRatio}
+        />
+      </div>
       <div className="space-y-8 animate-fade-in no-print">
         {/* 1. 配方組成 */}
         <div className="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
@@ -1062,12 +1114,18 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <span className="sm:hidden">製作</span>
               </button>
               <button
-                onClick={() => window.print()}
-                className="flex items-center gap-2 px-3 py-1.5 bg-white text-stone-700 rounded-full border border-stone-200 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 active:scale-95 shadow-sm"
+                onClick={handleDownloadPDF}
+                disabled={isDownloading}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all text-[10px] font-black uppercase tracking-widest active:scale-95 shadow-sm ${isDownloading ? 'bg-stone-100 text-stone-400 cursor-wait' : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                  }`}
               >
-                <Printer className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">輸出 PDF / 列印</span>
-                <span className="sm:hidden">列印</span>
+                {isDownloading ? (
+                  <div className="w-3.5 h-3.5 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
+                ) : (
+                  <Printer className="w-3.5 h-3.5" />
+                )}
+                <span className="hidden sm:inline">{isDownloading ? '正在生成 PDF...' : '另存為 PDF'}</span>
+                <span className="sm:hidden">{isDownloading ? '生成中..' : '存 PDF'}</span>
               </button>
               {results.totalWeight > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full border border-white/20">
