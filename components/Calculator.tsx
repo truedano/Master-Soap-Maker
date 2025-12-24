@@ -540,8 +540,10 @@ const RecipePrintCard: React.FC<{
   items: FormulaItem[];
   results: any;
   waterRatio: number;
-}> = ({ name, items, results, waterRatio }) => {
+  pdfMode: 'expert' | 'beginner';
+}> = ({ name, items, results, waterRatio, pdfMode }) => {
   const date = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+  const isBeginner = pdfMode === 'beginner';
 
   return (
     <div className="print-card p-8 bg-white text-stone-900 font-sans">
@@ -591,13 +593,25 @@ const RecipePrintCard: React.FC<{
               const oil = OILS.find(o => o.id === item.oilId);
               if (!oil || item.weight <= 0) return null;
               return (
-                <tr key={idx} className="border-b border-stone-100">
-                  <td className="py-4">{oil.name}</td>
-                  <td className="py-4 text-right tabular-nums">{item.weight}g</td>
-                  <td className="py-4 text-right tabular-nums">
-                    {Math.round((item.weight / (results.totalWeight || 1)) * 100)}%
-                  </td>
-                </tr>
+                <React.Fragment key={idx}>
+                  <tr className="border-b border-stone-100">
+                    <td className="py-4 font-black">{oil.name}</td>
+                    <td className="py-4 text-right tabular-nums">{item.weight}g</td>
+                    <td className="py-4 text-right tabular-nums">
+                      {Math.round((item.weight / (results.totalWeight || 1)) * 100)}%
+                    </td>
+                  </tr>
+                  {isBeginner && (
+                    <tr className="bg-stone-50/50">
+                      <td colSpan={3} className="pb-4 pt-1 px-4 rounded-lg border-x border-b border-stone-100">
+                        <p className="text-[10px] text-stone-500 italic leading-relaxed">
+                          <span className="font-black text-amber-600 mr-1">🔍 角色說明：</span>
+                          {oil.description}
+                        </p>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               );
             })}
           </tbody>
@@ -647,6 +661,22 @@ const RecipePrintCard: React.FC<{
               <span className="text-sm font-black text-stone-500">配方 INS 值 (建議 120-170)</span>
               <span className={`text-2xl font-black ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}>{results.avgIns}</span>
             </div>
+
+            {isBeginner && (
+              <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-[11px] font-black text-amber-900 mb-1 flex items-center gap-1">
+                  <Lightbulb className="w-3 h-3" /> 白話解讀 (Insight)
+                </p>
+                <p className="text-[10px] text-amber-800 leading-relaxed font-bold">
+                  這款皂被判定為「{results.personality}」。
+                  {results.qualities.conditioning > 60 ? '洗感極其滋潤，非常適合乾性或冬天使用。' :
+                    results.qualities.cleansing > 18 ? '清潔力強勁，洗完感覺清爽，是夏天的首選。' :
+                      '各項數據平衡，是適合所有膚質的萬用配方。'}
+                  {results.avgIns < 120 ? '目前 INS 較低，成皂後建議延長晾皂時間以增加質地硬度。' : ''}
+                </p>
+              </div>
+            )}
+
             {(Object.keys(QUALITY_UI) as Array<keyof typeof QUALITY_UI>).map((key) => {
               const ui = QUALITY_UI[key];
               const range = QUALITY_RANGES[key];
@@ -662,7 +692,7 @@ const RecipePrintCard: React.FC<{
                   </div>
                 </div>
               );
-            })}`
+            })}
           </div>
         </div>
 
@@ -680,14 +710,73 @@ const RecipePrintCard: React.FC<{
         </div>
       </div>
 
+      {isBeginner && (
+        <div className="space-y-12">
+          <div className="html2pdf__page-break" />
+          <div className="flex gap-12 mb-12" style={{ pageBreakBefore: 'auto' }}>
+            {/* Workflow Checklist */}
+            <div className="flex-1">
+              <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
+                <CheckCircle2 className="w-5 h-5 text-green-600" /> 實作流程查檢表 (Checklist)
+              </h2>
+              <div className="space-y-3">
+                {[
+                  '準備防護裝備 (手套、口罩、護目鏡)',
+                  '溶鹼：將「氫氧化鈉」加入「純水」中',
+                  '秤量油脂並加溫至 40-45°C',
+                  '油鹼混合 (溫差控制在 5°C 內)',
+                  '攪拌至 Trace (液面可劃出痕跡)',
+                  '加入添加物 (精油、色粉等)',
+                  '入模並保溫 24-48 小時'
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-stone-300 rounded-md shrink-0" />
+                    <span className="text-xs font-bold text-stone-600">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Curing Timeline */}
+            <div className="flex-1">
+              <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
+                <Activity className="w-5 h-5 text-blue-600" /> 熟成進度追蹤 (Timeline)
+              </h2>
+              <div className="space-y-4 pt-2">
+                {[
+                  { label: '製作日期', val: date },
+                  { label: '預計脫模日期', val: '____年__月__日' },
+                  { label: '預計切皂日期', val: '____年__月__日' },
+                  { label: '預計啟用日期', val: '____年__月__日 (建議 4-6 週)' },
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col gap-1 border-b border-stone-50 pb-2">
+                    <span className="text-[10px] font-black text-stone-400 uppercase">{item.label}</span>
+                    <span className="text-sm font-black text-stone-800">{item.val}</span>
+                  </div>
+                ))}
+                <div className="mt-4 p-4 border border-dashed border-stone-200 rounded-xl bg-stone-50/50">
+                  <span className="text-[10px] font-black text-stone-400 block mb-2 uppercase">pH 值測試紀錄</span>
+                  <div className="flex gap-4">
+                    {[1, 2, 3].map(n => (
+                      <div key={n} className="flex-1 border-b border-stone-300 pb-1 text-[10px] text-stone-300">Test {n}:</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Safety Alert */}
-      <div className="p-8 bg-stone-100 rounded-[2.5rem] flex items-center gap-6 border border-stone-200">
-        <Shield className="w-12 h-12 text-stone-400 flex-shrink-0" />
+      <div className={`p-8 rounded-[2.5rem] flex items-center gap-6 border ${isBeginner ? 'bg-orange-50 border-orange-200 ring-4 ring-orange-100/50' : 'bg-stone-100 border-stone-200'}`}>
+        <Shield className={`w-12 h-12 flex-shrink-0 ${isBeginner ? 'text-orange-500' : 'text-stone-400'}`} />
         <div>
-          <p className="font-black text-lg mb-1">【安全警語 · Safety Standards】</p>
+          <p className="font-black text-lg mb-1">{isBeginner ? '⚠️【新手必看 · 安全規範要求】' : '【安全警語 · Safety Standards】'}</p>
           <p className="text-xs text-stone-600 leading-relaxed font-bold opacity-80">
-            操作氫氧化納具有強腐蝕性。製作過程中請務必全程配戴長袖衣物、護目鏡及防酸鹼手套。
-            油鹼混合時會產生化學放熱，請於通風良好處製作。如不慎接觸皮膚，請立即以大量清水沖洗並視情況就醫。
+            {isBeginner
+              ? '操作氫氧化納具強腐蝕性且會發熱！倒水時請務必「將鹼倒入水」中，避免噴濺。全程必須佩戴護目鏡與手套。萬一接觸皮膚，請立即沖水至少 15 分鐘並就醫。'
+              : '操作氫氧化納具有強腐蝕性。製作過程中請務必全程配戴長袖衣物、護目鏡及防酸鹼手套。油鹼混合時會產生化學放熱，請於通風良好處製作。如不慎接觸皮膚，請立即以大量清水沖洗並視情況就醫。'}
           </p>
         </div>
       </div>
@@ -743,6 +832,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const [hoveringSlotIndex, setHoveringSlotIndex] = useState<number | null>(null);
   const [previewWeightChange, setPreviewWeightChange] = useState<number>(0);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [pdfMode, setPdfMode] = useState<'expert' | 'beginner'>('beginner');
   const printRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => {
@@ -992,7 +1082,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
     setIsDownloading(true);
 
     const element = printRef.current;
-    const fileName = `手工皂配方_${recipeName || '未命名'}.pdf`;
+
+    // 生成檔名：[配方名稱]_[模式]_[日期時間].pdf
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
+    const modeStr = pdfMode === 'beginner' ? '新手版' : '專家版';
+    const fileName = `${recipeName || '手工皂配方'}_${modeStr}_${dateStr}.pdf`;
 
     const opt = {
       margin: 10,
@@ -1004,6 +1099,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
         letterRendering: true,
         logging: false
       },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
     };
 
@@ -1023,14 +1119,19 @@ export const Calculator: React.FC<CalculatorProps> = ({
 
   return (
     <div className="calculator-container">
-      {/* PDF 隱藏渲染區域：保持在 DOM 中但位移到可視範圍外，確保 html2canvas 能抓到樣式 */}
-      <div className="fixed -left-[9999px] top-0 w-[800px]" aria-hidden="true">
+      {/* PDF 隱藏渲染區域：改用 absolute + opacity 0，增加相容性 */}
+      <div
+        className="absolute top-0 left-0 w-[800px] pointer-events-none opacity-0"
+        style={{ zIndex: -100 }}
+        aria-hidden="true"
+      >
         <div ref={printRef}>
           <RecipePrintCard
             name={recipeName}
             items={items}
             results={results}
             waterRatio={waterRatio}
+            pdfMode={pdfMode}
           />
         </div>
       </div>
@@ -1042,6 +1143,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
           items={items}
           results={results}
           waterRatio={waterRatio}
+          pdfMode={pdfMode}
         />
       </div>
       <div className="space-y-8 animate-fade-in no-print">
@@ -1067,6 +1169,22 @@ export const Calculator: React.FC<CalculatorProps> = ({
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:justify-end">
+              {/* PDF 模式切換 */}
+              <div className="flex bg-white/10 p-1 rounded-lg border border-white/20 shrink-0">
+                <button
+                  onClick={() => setPdfMode('beginner')}
+                  className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${pdfMode === 'beginner' ? 'bg-green-600 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
+                >
+                  新手 PDF
+                </button>
+                <button
+                  onClick={() => setPdfMode('expert')}
+                  className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${pdfMode === 'expert' ? 'bg-stone-600 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
+                >
+                  專家 PDF
+                </button>
+              </div>
+
               <div className="flex bg-white/10 p-1 rounded-lg border border-white/20 shrink-0">
                 <button
                   onClick={() => setInputMode('weight')}
@@ -1444,74 +1562,76 @@ export const Calculator: React.FC<CalculatorProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </div >
 
       {/* 儲存選單 Modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowSaveModal(false)} />
-          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 animate-scale-up border border-stone-100">
-            <button
-              onClick={() => setShowSaveModal(false)}
-              className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-800 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 theme-bg-light rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Bookmark className="w-8 h-8 theme-text-primary" />
-              </div>
-              <h3 className="text-2xl font-black text-stone-800">為您的配方命名</h3>
-              <p className="text-stone-500 text-sm mt-2">命名後即可存入您的私藏配方庫</p>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mt-1">配方總額 (成本)</p>
-                {showCost && (
-                  <CostChart items={items} oilPrices={oilPrices} />
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-black text-stone-400 uppercase tracking-widest pl-1">配方名稱</label>
-                <div className="relative">
-                  <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300" />
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="例如：春季薰衣草馬賽皂"
-                    className="w-full pl-12 pr-4 py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-none focus:border-amber-500 focus:bg-white transition-all font-bold text-stone-800"
-                    value={recipeName}
-                    onChange={(e) => setRecipeName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && recipeName.trim()) {
-                        onSaveRecipe(recipeName);
-                        // 不再清空名稱，保持同步
-                        setShowSaveModal(false);
-                        setShowLibrary(true);
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
+      {
+        showSaveModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowSaveModal(false)} />
+            <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 animate-scale-up border border-stone-100">
               <button
-                disabled={!recipeName.trim()}
-                onClick={() => {
-                  onSaveRecipe(recipeName);
-                  // 不再清空名稱，保持同步
-                  setShowSaveModal(false);
-                  setShowLibrary(true);
-                }}
-                className="w-full py-4 theme-bg-primary text-white rounded-2xl font-black hover:opacity-90 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale shadow-lg shadow-amber-600/10 flex items-center justify-center gap-2"
+                onClick={() => setShowSaveModal(false)}
+                className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-800 transition-colors"
               >
-                確 定 儲 存
+                <X className="w-5 h-5" />
               </button>
+
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 theme-bg-light rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Bookmark className="w-8 h-8 theme-text-primary" />
+                </div>
+                <h3 className="text-2xl font-black text-stone-800">為您的配方命名</h3>
+                <p className="text-stone-500 text-sm mt-2">命名後即可存入您的私藏配方庫</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mt-1">配方總額 (成本)</p>
+                  {showCost && (
+                    <CostChart items={items} oilPrices={oilPrices} />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-stone-400 uppercase tracking-widest pl-1">配方名稱</label>
+                  <div className="relative">
+                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300" />
+                    <input
+                      type="text"
+                      autoFocus
+                      placeholder="例如：春季薰衣草馬賽皂"
+                      className="w-full pl-12 pr-4 py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-none focus:border-amber-500 focus:bg-white transition-all font-bold text-stone-800"
+                      value={recipeName}
+                      onChange={(e) => setRecipeName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && recipeName.trim()) {
+                          onSaveRecipe(recipeName);
+                          // 不再清空名稱，保持同步
+                          setShowSaveModal(false);
+                          setShowLibrary(true);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  disabled={!recipeName.trim()}
+                  onClick={() => {
+                    onSaveRecipe(recipeName);
+                    // 不再清空名稱，保持同步
+                    setShowSaveModal(false);
+                    setShowLibrary(true);
+                  }}
+                  className="w-full py-4 theme-bg-primary text-white rounded-2xl font-black hover:opacity-90 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale shadow-lg shadow-amber-600/10 flex items-center justify-center gap-2"
+                >
+                  確 定 儲 存
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-7 space-y-8">
@@ -1830,7 +1950,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
           />
         )}
       </div>
-    </div>
+    </div >
 
   );
 };
