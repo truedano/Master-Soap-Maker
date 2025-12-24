@@ -2,6 +2,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import ReactGA from 'react-ga4';
 import html2pdf from 'html2pdf.js';
+import { useTranslation } from 'react-i18next';
 import { OILS, QUALITY_RANGES, QUALITY_UI, PRESETS } from '../constants';
 import { FormulaItem, OilQualities, OilData, SavedFormula, AdditiveItem } from '../types';
 import { NumberTicker } from './NumberTicker';
@@ -74,6 +75,7 @@ const Tooltip: React.FC<{ text: string; children: React.ReactNode }> = ({ text, 
 
 // 成本分佈圖
 const CostChart: React.FC<{ items: FormulaItem[], oilPrices: Record<string, number>, additives?: any[] }> = ({ items, oilPrices, additives = [] }) => {
+  const { t } = useTranslation();
   const breakdown = useMemo(() => {
     let total = 0;
     const data = items.map(item => {
@@ -81,7 +83,7 @@ const CostChart: React.FC<{ items: FormulaItem[], oilPrices: Record<string, numb
       if (!oil || item.weight <= 0) return null;
       const price = ((oilPrices[oil.id] || oil.defaultPrice || 0) / 1000) * item.weight;
       total += price;
-      return { name: oil.name, price };
+      return { name: t(oil.name), price };
     }).filter(Boolean) as { name: string, price: number }[];
 
     additives.forEach(add => {
@@ -92,14 +94,14 @@ const CostChart: React.FC<{ items: FormulaItem[], oilPrices: Record<string, numb
     });
 
     return { total, data: data.sort((a, b) => b.price - a.price) };
-  }, [items, oilPrices, additives]);
+  }, [items, oilPrices, additives, t]);
 
   if (breakdown.total === 0) return null;
 
   return (
     <div className="space-y-3 mt-4 p-4 bg-stone-50 rounded-2xl border border-stone-100">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">預算分佈 (Cost Distribution)</span>
+        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{t('calculator.cost_report')}</span>
         <span className="text-[10px] font-black text-amber-600">Total: NT$ {Math.round(breakdown.total)}</span>
       </div>
       <div className="flex h-3 w-full rounded-full overflow-hidden shadow-inner bg-stone-200">
@@ -137,6 +139,7 @@ const ProductionMode: React.FC<{
   results: any,
   onClose: () => void
 }> = ({ items, results, onClose }) => {
+  const { t } = useTranslation();
   const [steps, setSteps] = useState<Record<string, boolean>>({});
 
   const toggleStep = (id: string) => {
@@ -149,8 +152,8 @@ const ProductionMode: React.FC<{
         {/* Header */}
         <div className="flex items-center justify-between border-b-2 border-stone-100 pb-6">
           <div>
-            <h1 className="text-4xl font-black text-stone-900 tracking-tighter">打皂製作單</h1>
-            <p className="text-stone-400 font-bold mt-1">請準備好防護裝備：手套、口罩、護目鏡</p>
+            <h1 className="text-4xl font-black text-stone-900 tracking-tighter">{t('production.title')}</h1>
+            <p className="text-stone-400 font-bold mt-1">{t('production.safety_reminder')}</p>
           </div>
           <button onClick={onClose} className="p-3 bg-stone-100 rounded-2xl hover:bg-stone-200 transition-all">
             <X className="w-8 h-8 text-stone-600" />
@@ -160,15 +163,15 @@ const ProductionMode: React.FC<{
         {/* 核心數據 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-8 bg-stone-900 text-white rounded-[2.5rem] space-y-1">
-            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">氫氧化鈉 (NaOH)</p>
+            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">{t('calculator.naoh_req')} (NaOH)</p>
             <p className="text-5xl font-black tabular-nums tracking-tighter text-amber-400">{results.totalNaoh}<span className="text-xl ml-1">g</span></p>
           </div>
           <div className="p-8 bg-blue-600 text-white rounded-[2.5rem] space-y-1 shadow-xl shadow-blue-100">
-            <p className="text-xs font-black text-blue-200 uppercase tracking-widest">純水 (Water)</p>
+            <p className="text-xs font-black text-blue-200 uppercase tracking-widest">{t('calculator.water_req')} (Water)</p>
             <p className="text-5xl font-black tabular-nums tracking-tighter">{results.water}<span className="text-xl ml-1">g</span></p>
           </div>
           <div className="p-8 bg-stone-100 text-stone-900 rounded-[2.5rem] space-y-1 border-2 border-stone-200">
-            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">總油脂 (Total Oil)</p>
+            <p className="text-xs font-black text-stone-400 uppercase tracking-widest">{t('production.step_1_oil')}</p>
             <p className="text-5xl font-black tabular-nums tracking-tighter">{results.totalWeight}<span className="text-xl ml-1">g</span></p>
           </div>
         </div>
@@ -179,7 +182,7 @@ const ProductionMode: React.FC<{
             <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
               <span className="text-amber-600 text-sm">1</span>
             </div>
-            稱取油脂 (Weighing Oils)
+            {t('production.step_1_oil')}
           </h2>
           <div className="grid grid-cols-1 gap-4">
             {items.map((item, i) => {
@@ -196,7 +199,7 @@ const ProductionMode: React.FC<{
                     <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${steps[stepId] ? 'bg-green-500 border-green-500' : 'border-stone-800'}`}>
                       {steps[stepId] && <CheckCircle2 className="w-5 h-5 text-white" />}
                     </div>
-                    <span className="text-xl font-black text-stone-800">{oil.name}</span>
+                    <span className="text-xl font-black text-stone-800">{t(oil.name)}</span>
                   </div>
                   <span className="text-2xl font-black tabular-nums">{item.weight}g</span>
                 </div>
@@ -213,7 +216,7 @@ const ProductionMode: React.FC<{
               <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center">
                 <span className="text-pink-600 text-sm font-bold">1.5</span>
               </div>
-              稱取添加物 (Weighing Additives)
+              {t('production.step_1_5_additive')}
             </h2>
             <div className="grid grid-cols-1 gap-4">
               {results.calculatedAdditives.map((add: any, i: number) => {
@@ -230,7 +233,7 @@ const ProductionMode: React.FC<{
                       </div>
                       <div>
                         <span className="text-xl font-black text-stone-800">{add.name}</span>
-                        <span className="text-xs font-bold text-stone-400 block ml-0.5">{add.type === 'scent' ? '建議入模前添加' : '依需求添加'}</span>
+                        <span className="text-xs font-bold text-stone-400 block ml-0.5">{add.type === 'scent' ? t('production.steps.additive_hint', '建議入模前添加') : t('production.steps.other_hint', '依需求添加')}</span>
                       </div>
                     </div>
                     <span className="text-2xl font-black tabular-nums text-pink-500">{add.calculatedWeight.toFixed(1)}g</span>
@@ -247,15 +250,15 @@ const ProductionMode: React.FC<{
             <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
               <span className="text-blue-600 text-sm">2</span>
             </div>
-            製作流程 (Workflow)
+            {t('production.step_2_flow')}
           </h2>
           <div className="space-y-4">
             {[
-              { id: 'mix-water', label: '鹼水製作 (冷卻至 40-45°C)' },
-              { id: 'mix-oil', label: '油脂融合 (加溫至 40-45°C)' },
-              { id: 'blend', label: '油鹼混合 (攪拌至 Trace)' },
-              { id: 'essential', label: '添加精油/添加物' },
-              { id: 'mold', label: '入模並封保鮮膜' },
+              { id: 'mix-water', label: t('production.steps.lye') },
+              { id: 'mix-oil', label: t('production.steps.oil') },
+              { id: 'blend', label: t('production.steps.mix') },
+              { id: 'essential', label: t('production.steps.additive') },
+              { id: 'mold', label: t('production.steps.mold') },
             ].map((step) => (
               <div
                 key={step.id}
@@ -272,25 +275,25 @@ const ProductionMode: React.FC<{
         </div>
       </div>
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-stone-100 md:hidden">
-        <button onClick={onClose} className="w-full py-4 bg-stone-900 text-white rounded-2xl font-black text-lg">結束製作</button>
+        <button onClick={onClose} className="w-full py-4 bg-stone-900 text-white rounded-2xl font-black text-lg">{t('production.finish')}</button>
       </div>
     </div>
-
   );
 };
 
 // 雷達圖組件
 const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQualities | null }> = ({ qualities, previewQualities }) => {
+  const { t } = useTranslation();
   const size = 320;
   const center = size / 2;
   const radius = size * 0.35;
 
   const points = [
-    { key: 'cleansing', label: QUALITY_UI.cleansing.label },
-    { key: 'bubbly', label: QUALITY_UI.bubbly.label },
-    { key: 'hardness', label: QUALITY_UI.hardness.label },
-    { key: 'conditioning', label: QUALITY_UI.conditioning.label },
-    { key: 'creamy', label: QUALITY_UI.creamy.label },
+    { key: 'cleansing', label: t(QUALITY_UI.cleansing.label) },
+    { key: 'bubbly', label: t(QUALITY_UI.bubbly.label) },
+    { key: 'hardness', label: t(QUALITY_UI.hardness.label) },
+    { key: 'conditioning', label: t(QUALITY_UI.conditioning.label) },
+    { key: 'creamy', label: t(QUALITY_UI.creamy.label) },
   ] as const;
 
   const getCoordinates = (value: number, index: number, max: number = 100) => {
@@ -364,7 +367,7 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
             <g key={i}>
               <circle cx={coords.x} cy={coords.y} r="4.5" fill={ui.color} className="stroke-white stroke-2 shadow-sm" />
               <foreignObject x={labelCoords.x - 20} y={labelCoords.y - 20} width="80" height="40" className="overflow-visible">
-                <Tooltip text={ui.label === '清潔' ? '去除油脂的能力' : ui.label === '保濕' ? '成皂後的滋潤程度' : ui.label === '硬度' ? '皂體的堅硬耐久度' : ui.label === '起泡' ? '產生大泡沫的能力' : '保護小泡沫不破裂的能力'}>
+                <Tooltip text={t(`${ui.label}_tip`)}>
                   <div className="flex items-center gap-1 cursor-help whitespace-nowrap p-1">
                     <QualityIcon name={ui.icon} size={14} color={ui.color} />
                     <span className="text-[12px] font-black" style={{ color: ui.color }}>
@@ -381,11 +384,11 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
       <div className="flex gap-4 mt-4 bg-stone-50 px-4 py-2 rounded-full border border-stone-100">
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 bg-amber-600 rounded-full" />
-          <span className="text-[10px] font-black text-stone-500">目前數據</span>
+          <span className="text-[10px] font-black text-stone-500">{t('calculator.current_data')}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2.5 h-2.5 bg-stone-200 border border-stone-300 border-dashed rounded-full" />
-          <span className="text-[10px] font-black text-stone-500">理想範圍</span>
+          <span className="text-[10px] font-black text-stone-500">{t('calculator.ideal_range')}</span>
         </div>
       </div>
     </div>
@@ -394,6 +397,7 @@ const RadarChart: React.FC<{ qualities: OilQualities, previewQualities?: OilQual
 
 // 微型五力分布圖表
 export const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
+  const { t } = useTranslation();
   const qualities = [
     { key: 'hardness', ...QUALITY_UI.hardness, val: oil.hardness },
     { key: 'cleansing', ...QUALITY_UI.cleansing, val: oil.cleansing },
@@ -405,7 +409,7 @@ export const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between text-[10px] font-black text-stone-400 uppercase tracking-widest px-1">
-        <span>五力數值 (Quality Metrics)</span>
+        <span>{t('calculator.quality_metrics', '五力數值 (Quality Metrics)')}</span>
       </div>
       <div className="grid grid-cols-2 gap-x-6 gap-y-3">
         {qualities.map(q => (
@@ -413,7 +417,7 @@ export const MiniQualityBars: React.FC<{ oil: OilData }> = ({ oil }) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <QualityIcon name={q.icon} size={13} color={q.color} />
-                <span className="text-xs font-bold text-stone-600">{q.label}</span>
+                <span className="text-xs font-bold text-stone-600">{t(q.label)}</span>
               </div>
               <span className="text-xs font-black text-stone-800 tabular-nums">{q.val}</span>
             </div>
@@ -437,6 +441,7 @@ const CustomOilSelect: React.FC<{
   onHover: (oil: OilData | null) => void;
   lackingKeys: string[];
 }> = ({ value, onChange, onHover, lackingKeys }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const selectedOil = OILS.find(o => o.id === value);
@@ -467,7 +472,7 @@ const CustomOilSelect: React.FC<{
           <div
             key={q.key}
             className={`flex items-center gap-1 px-1.5 py-0.5 rounded border ${q.val > 0 ? 'bg-white border-stone-200' : 'bg-stone-50 border-transparent opacity-40'}`}
-            title={q.label}
+            title={t(q.label)}
           >
             <QualityIcon name={q.icon} size={10} color={q.color} />
             <span className={`text-[10px] font-bold tabular-nums ${q.val > 0 ? 'text-stone-700' : 'text-stone-400'}`}>
@@ -490,7 +495,7 @@ const CustomOilSelect: React.FC<{
         className="w-full p-3 bg-white border border-stone-200 rounded-xl flex flex-col outline-none focus:ring-4 focus:ring-amber-500/20 text-stone-700 font-bold transition-all shadow-sm hover:border-amber-300"
       >
         <div className="flex items-center justify-between w-full">
-          <span className="truncate">{selectedOil?.name || '選擇油脂'}</span>
+          <span className="truncate">{selectedOil ? t(selectedOil.name) : t('calculator.select_oil', '選擇油脂')}</span>
           <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
         {selectedOil && renderQualityBadges(selectedOil)}
@@ -517,11 +522,11 @@ const CustomOilSelect: React.FC<{
                   <div className="flex items-center gap-2">
                     {isRecommended && (
                       <span className="bg-amber-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm flex items-center gap-1 shadow-sm">
-                        ✨ 推薦
+                        ✨ {t('calculator.recommended', '推薦')}
                       </span>
                     )}
                     <span className={`text-sm font-bold truncate ${isRecommended ? 'text-amber-900 font-black' : 'text-stone-700'}`}>
-                      {oil.name}
+                      {t(oil.name)}
                     </span>
                   </div>
                   {value === oil.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
@@ -543,6 +548,7 @@ const RecipePrintCard: React.FC<{
   waterRatio: number;
   pdfMode: 'expert' | 'beginner';
 }> = ({ name, items, results, waterRatio, pdfMode }) => {
+  const { t } = useTranslation();
   const date = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
   const isBeginner = pdfMode === 'beginner';
 
@@ -551,11 +557,11 @@ const RecipePrintCard: React.FC<{
       {/* Header */}
       <div className="flex justify-between items-start border-b-4 border-stone-800 pb-8 mb-8">
         <div>
-          <h1 className="text-4xl font-black tracking-tighter mb-2">{name || '未命名專家配方'}</h1>
-          <p className="text-stone-500 font-bold">手工皂製作大師 · 專業配方報告</p>
+          <h1 className="text-4xl font-black tracking-tighter mb-2">{name || t('calculator.default_recipe_name', '未命名專家配方')}</h1>
+          <p className="text-stone-500 font-bold">{t('app.title')} · {t('calculator.pro_report_title', '專業配方報告')}</p>
         </div>
         <div className="text-right">
-          <p className="text-sm font-black text-stone-400 uppercase tracking-widest leading-none mb-1">製作日期</p>
+          <p className="text-sm font-black text-stone-400 uppercase tracking-widest leading-none mb-1">{t('calculator.date', '製作日期')}</p>
           <p className="text-xl font-black">{date}</p>
         </div>
       </div>
@@ -563,15 +569,15 @@ const RecipePrintCard: React.FC<{
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-8 mb-12">
         <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
-          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">NaOH (氫氧化鈉)</p>
+          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{t('calculator.naoh_req')} (NaOH)</p>
           <p className="text-3xl font-black">{results.totalNaoh}g</p>
         </div>
         <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
-          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">純水需求 (倍數: {waterRatio})</p>
+          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{t('calculator.water_req')} ({t('calculator.multiplier', '倍數')}: {waterRatio})</p>
           <p className="text-3xl font-black">{results.water}g</p>
         </div>
         <div className="p-6 bg-stone-100 rounded-2xl border border-stone-200">
-          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">配方總油脂重</p>
+          <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{t('calculator.total_oil_weight', '配方總油脂重')}</p>
           <p className="text-3xl font-black">{results.totalWeight}g</p>
         </div>
       </div>
@@ -579,14 +585,14 @@ const RecipePrintCard: React.FC<{
       {/* Main Content: Oils */}
       <div className="mb-12">
         <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
-          <Scale className="w-5 h-5" /> 油脂成分表 (Ingredients)
+          <Scale className="w-5 h-5" /> {t('production.step_1_oil')} ({t('calculator.ingredients', 'Ingredients')})
         </h2>
         <table className="w-full text-left">
           <thead>
             <tr className="text-stone-400 text-[10px] font-black uppercase tracking-widest border-b border-stone-100">
-              <th className="py-3">油脂名稱</th>
-              <th className="py-3 text-right">重量 (g)</th>
-              <th className="py-3 text-right">比例 (%)</th>
+              <th className="py-3">{t('calculator.oil_name', '油脂名稱')}</th>
+              <th className="py-3 text-right">{t('calculator.weight_g', '重量 (g)')}</th>
+              <th className="py-3 text-right">{t('calculator.ratio_percent', '比例 (%)')}</th>
             </tr>
           </thead>
           <tbody className="text-stone-700 font-bold">
@@ -596,7 +602,7 @@ const RecipePrintCard: React.FC<{
               return (
                 <React.Fragment key={idx}>
                   <tr className="border-b border-stone-100">
-                    <td className="py-4 font-black">{oil.name}</td>
+                    <td className="py-4 font-black">{t(oil.name)}</td>
                     <td className="py-4 text-right tabular-nums">{item.weight}g</td>
                     <td className="py-4 text-right tabular-nums">
                       {Math.round((item.weight / (results.totalWeight || 1)) * 100)}%
@@ -606,8 +612,8 @@ const RecipePrintCard: React.FC<{
                     <tr className="bg-stone-50/50">
                       <td colSpan={3} className="pb-4 pt-1 px-4 rounded-lg border-x border-b border-stone-100">
                         <p className="text-[10px] text-stone-500 italic leading-relaxed">
-                          <span className="font-black text-amber-600 mr-1">🔍 角色說明：</span>
-                          {oil.description}
+                          <span className="font-black text-amber-600 mr-1">🔍 {t('calculator.insight_prefix', '角色說明')}：</span>
+                          {t(oil.description)}
                         </p>
                       </td>
                     </tr>
@@ -622,15 +628,15 @@ const RecipePrintCard: React.FC<{
       {results.calculatedAdditives.length > 0 && (
         <div className="mb-12">
           <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
-            <Sparkles className="w-5 h-5" /> 添加物成分表 (Additives)
+            <Sparkles className="w-5 h-5" /> {t('production.step_1_5_additive')} ({t('calculator.additives', 'Additives')})
           </h2>
           <table className="w-full text-left">
             <thead>
               <tr className="text-stone-400 text-[10px] font-black uppercase tracking-widest border-b border-stone-100">
-                <th className="py-3">材料名稱</th>
-                <th className="py-3">類型</th>
-                <th className="py-3 text-right">重量 (g)</th>
-                <th className="py-3 text-right">比例 (%)</th>
+                <th className="py-3">{t('calculator.additive_name', '材料名稱')}</th>
+                <th className="py-3">{t('calculator.additive_type', '類型')}</th>
+                <th className="py-3 text-right">{t('calculator.weight_g', '重量 (g)')}</th>
+                <th className="py-3 text-right">{t('calculator.ratio_percent', '比例 (%)')}</th>
               </tr>
             </thead>
             <tbody className="text-stone-700 font-bold">
@@ -638,7 +644,7 @@ const RecipePrintCard: React.FC<{
                 <tr key={idx} className="border-b border-stone-100">
                   <td className="py-4">{add.name}</td>
                   <td className="py-4 text-xs text-stone-500">
-                    {add.type === 'scent' ? '精油/香氛' : add.type === 'color' ? '色粉' : '其他'}
+                    {add.type === 'scent' ? t('production.additive_type_scent', '精油/香氛') : add.type === 'color' ? t('production.additive_type_color', '色粉') : t('production.additive_type_other', '其他')}
                   </td>
                   <td className="py-4 text-right tabular-nums">{add.calculatedWeight.toFixed(1)}g</td>
                   <td className="py-4 text-right tabular-nums">
@@ -655,25 +661,25 @@ const RecipePrintCard: React.FC<{
       <div className="grid grid-cols-2 gap-12 mb-12">
         <div>
           <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
-            <TrendingUp className="w-5 h-5" /> 五力分布與 INS
+            <TrendingUp className="w-5 h-5" /> {t('calculator.analysis_title', '五力分布與 INS')}
           </h2>
           <div className="space-y-4 pt-2">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-sm font-black text-stone-500">配方 INS 值 (建議 120-170)</span>
+              <span className="text-sm font-black text-stone-500">{t('calculator.ins_label', '配方 INS 值')} ({t('calculator.ideal_range_label', '建議')} 120-170)</span>
               <span className={`text-2xl font-black ${results.avgIns < 120 || results.avgIns > 170 ? 'text-orange-500' : 'text-green-600'}`}>{results.avgIns}</span>
             </div>
 
             {isBeginner && (
               <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100">
                 <p className="text-[11px] font-black text-amber-900 mb-1 flex items-center gap-1">
-                  <Lightbulb className="w-3 h-3" /> 白話解讀 (Insight)
+                  <Lightbulb className="w-3 h-3" /> {t('calculator.white_insight', '白話解讀 (Insight)')}
                 </p>
                 <p className="text-[10px] text-amber-800 leading-relaxed font-bold">
-                  這款皂被判定為「{results.personality}」。
-                  {results.qualities.conditioning > 60 ? '洗感極其滋潤，非常適合乾性或冬天使用。' :
-                    results.qualities.cleansing > 18 ? '清潔力強勁，洗完感覺清爽，是夏天的首選。' :
-                      '各項數據平衡，是適合所有膚質的萬用配方。'}
-                  {results.avgIns < 120 ? '目前 INS 較低，成皂後建議延長晾皂時間以增加質地硬度。' : ''}
+                  {t('calculator.personality_prefix', '這款皂被判定為')}「{t(`calculator.personality.${results.personality}`, results.personality)}」。
+                  {results.qualities.conditioning > 60 ? t('calculator.insight_conditioning', '洗感極其滋潤，非常適合乾性或冬天使用。') :
+                    results.qualities.cleansing > 18 ? t('calculator.insight_cleansing', '清潔力強勁，洗完感覺清爽，是夏天的首選。') :
+                      t('calculator.insight_balanced', '各項數據平衡，是適合所有膚質的萬用配方。')}
+                  {results.avgIns < 120 ? t('calculator.insight_ins_low', '目前 INS 較低，成皂後建議延長晾皂時間以增加質地硬度。') : ''}
                 </p>
               </div>
             )}
@@ -685,8 +691,8 @@ const RecipePrintCard: React.FC<{
               return (
                 <div key={key} className="space-y-1">
                   <div className="flex justify-between text-[10px] font-black uppercase">
-                    <span>{ui.label}</span>
-                    <span className="text-stone-400">{val} / 建議 {range.min}-{range.max}</span>
+                    <span>{t(ui.label)}</span>
+                    <span className="text-stone-400">{val} / {t('calculator.ideal_range_label', '建議')} {range.min}-{range.max}</span>
                   </div>
                   <div className="h-1.5 bg-stone-100 rounded-full overflow-hidden">
                     <div className="h-full bg-stone-800" style={{ width: `${Math.min(val, 100)}%` }} />
@@ -699,7 +705,7 @@ const RecipePrintCard: React.FC<{
 
         <div>
           <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
-            <FileText className="w-5 h-5" /> 實作紀錄與筆記 (Notes)
+            <FileText className="w-5 h-5" /> {t('calculator.notes_title', '實作紀錄與筆記 (Notes)')}
           </h2>
           <div className="h-48 border border-dashed border-stone-200 rounded-2xl p-4 flex flex-col justify-between">
             <div className="border-b border-stone-100 pb-4" />
@@ -707,7 +713,7 @@ const RecipePrintCard: React.FC<{
             <div className="border-b border-stone-100 pb-4" />
             <div className="border-b border-stone-100 pb-4 last:border-0" />
           </div>
-          <p className="text-[10px] text-stone-400 mt-2 font-bold italic">💡 建議記錄：環境溫度、溼度、攪拌時間、保溫方式。</p>
+          <p className="text-[10px] text-stone-400 mt-2 font-bold italic">💡 {t('calculator.notes_hint', '建議記錄：環境溫度、溼度、攪拌時間、保溫方式。')}</p>
         </div>
       </div>
 
@@ -718,17 +724,17 @@ const RecipePrintCard: React.FC<{
             {/* Workflow Checklist */}
             <div className="flex-1">
               <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
-                <CheckCircle2 className="w-5 h-5 text-green-600" /> 實作流程查檢表 (Checklist)
+                <CheckCircle2 className="w-5 h-5 text-green-600" /> {t('calculator.checklist_title', '實作流程查檢表 (Checklist)')}
               </h2>
               <div className="space-y-3">
                 {[
-                  '準備防護裝備 (手套、口罩、護目鏡)',
-                  '溶鹼：將「氫氧化鈉」加入「純水」中',
-                  '秤量油脂並加溫至 40-45°C',
-                  '油鹼混合 (溫差控制在 5°C 內)',
-                  '攪拌至 Trace (液面可劃出痕跡)',
-                  '加入添加物 (精油、色粉等)',
-                  '入模並保溫 24-48 小時'
+                  t('production.step_prep_gear', '準備防護裝備 (手套、口罩、護目鏡)'),
+                  t('production.step_lye_prep', '溶鹼：將「氫氧化鈉」加入「純水」中'),
+                  t('production.step_oil_weigh', '秤量油脂並加溫至 40-45°C'),
+                  t('production.step_mix_lye_oil', '油鹼混合 (溫差控制在 5°C 內)'),
+                  t('production.step_blend_trace', '攪拌至 Trace (液面可劃出痕跡)'),
+                  t('production.step_additives', '加入添加物 (精油、色粉等)'),
+                  t('production.step_mold_insulate', '入模並保溫 24-48 小時')
                 ].map((step, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-5 h-5 border-2 border-stone-300 rounded-md shrink-0" />
@@ -741,14 +747,14 @@ const RecipePrintCard: React.FC<{
             {/* Curing Timeline */}
             <div className="flex-1">
               <h2 className="text-xl font-black mb-4 flex items-center gap-2 border-b-2 border-stone-100 pb-2">
-                <Activity className="w-5 h-5 text-blue-600" /> 熟成進度追蹤 (Timeline)
+                <Activity className="w-5 h-5 text-blue-600" /> {t('calculator.timeline_title', '熟成進度追蹤 (Timeline)')}
               </h2>
               <div className="space-y-4 pt-2">
                 {[
-                  { label: '製作日期', val: date },
-                  { label: '預計脫模日期', val: '____年__月__日' },
-                  { label: '預計切皂日期', val: '____年__月__日' },
-                  { label: '預計啟用日期', val: '____年__月__日 (建議 4-6 週)' },
+                  { label: t('calculator.date_created', '製作日期'), val: date },
+                  { label: t('calculator.date_unmold', '預計脫模日期'), val: '____年__月__日' },
+                  { label: t('calculator.date_cut', '預計切皂日期'), val: '____年__月__日' },
+                  { label: t('calculator.date_use', '預計啟用日期'), val: `____年__月__日 (${t('calculator.date_use_hint', '建議 4-6 週')})` },
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col gap-1 border-b border-stone-50 pb-2">
                     <span className="text-[10px] font-black text-stone-400 uppercase">{item.label}</span>
@@ -756,10 +762,10 @@ const RecipePrintCard: React.FC<{
                   </div>
                 ))}
                 <div className="mt-4 p-4 border border-dashed border-stone-200 rounded-xl bg-stone-50/50">
-                  <span className="text-[10px] font-black text-stone-400 block mb-2 uppercase">pH 值測試紀錄</span>
+                  <span className="text-[10px] font-black text-stone-400 block mb-2 uppercase">{t('calculator.ph_record', 'pH 值測試紀錄')}</span>
                   <div className="flex gap-4">
                     {[1, 2, 3].map(n => (
-                      <div key={n} className="flex-1 border-b border-stone-300 pb-1 text-[10px] text-stone-300">Test {n}:</div>
+                      <div key={n} className="flex-1 border-b border-stone-300 pb-1 text-[10px] text-stone-300">{t('calculator.test_n', 'Test')} {n}:</div>
                     ))}
                   </div>
                 </div>
@@ -773,17 +779,17 @@ const RecipePrintCard: React.FC<{
       <div className={`p-8 rounded-[2.5rem] flex items-center gap-6 border ${isBeginner ? 'bg-orange-50 border-orange-200 ring-4 ring-orange-100/50' : 'bg-stone-100 border-stone-200'}`}>
         <Shield className={`w-12 h-12 flex-shrink-0 ${isBeginner ? 'text-orange-500' : 'text-stone-400'}`} />
         <div>
-          <p className="font-black text-lg mb-1">{isBeginner ? '⚠️【新手必看 · 安全規範要求】' : '【安全警語 · Safety Standards】'}</p>
+          <p className="font-black text-lg mb-1">{isBeginner ? t('production.safety_title_beginner', '⚠️【新手必看 · 安全規範要求】') : t('production.safety_title_expert', '【安全警語 · Safety Standards】')}</p>
           <p className="text-xs text-stone-600 leading-relaxed font-bold opacity-80">
             {isBeginner
-              ? '操作氫氧化納具強腐蝕性且會發熱！倒水時請務必「將鹼倒入水」中，避免噴濺。全程必須佩戴護目鏡與手套。萬一接觸皮膚，請立即沖水至少 15 分鐘並就醫。'
-              : '操作氫氧化納具有強腐蝕性。製作過程中請務必全程配戴長袖衣物、護目鏡及防酸鹼手套。油鹼混合時會產生化學放熱，請於通風良好處製作。如不慎接觸皮膚，請立即以大量清水沖洗並視情況就醫。'}
+              ? t('production.safety_msg_beginner', '操作氫氧化納具強腐蝕性且會發熱！倒水時請務必「將鹼倒入水」中，避免噴濺。全程必須佩戴護目鏡與手套。萬一接觸皮膚，請立即沖水至少 15 分鐘並就醫。')
+              : t('production.safety_msg_expert', '操作氫氧化納具有強腐蝕性。製作過程中請務必全程配戴長袖衣物、護目鏡及防酸鹼手套。油鹼混合時會產生化學放熱，請於通風良好處製作。如不慎接觸皮膚，請立即以大量清水沖洗並視情況就醫。')}
           </p>
         </div>
       </div>
 
       <p className="text-center text-[10px] font-bold text-stone-400 mt-16 pt-8 border-t border-stone-100 tracking-widest flex items-center justify-center gap-2 uppercase">
-        <Sparkles className="w-3 h-3 text-amber-500" /> Master Soap Maker · Professional Recipe Report · 版權所有 © 2024
+        <Sparkles className="w-3 h-3 text-amber-500" /> {t('app.title')} · {t('calculator.pro_report_title', 'Professional Recipe Report')} · {t('app.copyright', '版權所有')} © 2024
       </p>
     </div>
   );
@@ -820,6 +826,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
   onLoadRecipe,
   onDeleteRecipe
 }) => {
+  const { t } = useTranslation();
   const [showCost, setShowCost] = useState(false);
   const [showLibrary, setShowLibrary] = useState(false);
   const [recipeName, setRecipeName] = useState('');
@@ -930,49 +937,49 @@ export const Calculator: React.FC<CalculatorProps> = ({
       return current.totalWeight > 0 && current.qualities[key] < QUALITY_RANGES[key].min;
     });
 
-    const suggestions: { text: string; qualityKey: string; actions: { name: string, weight: number, type: 'add' | 'reduce' }[] }[] = [];
+    const suggestions: { text: string; qualityKey: string; actions: { id: string, weight: number, type: 'add' | 'reduce' }[] }[] = [];
     if (current.avgIns > 0) {
       if (current.avgIns < 120) {
         suggestions.push({
-          text: "INS 過低 (皂體軟爛)",
+          text: t('calculator.suggestions.ins_low'),
           qualityKey: 'ins',
-          actions: [{ name: "椰子油", weight: baseSuggestWeight, type: 'add' }, { name: "棕櫚油", weight: baseSuggestWeight, type: 'add' }]
+          actions: [{ id: 'coconut', weight: baseSuggestWeight, type: 'add' }, { id: 'palm', weight: baseSuggestWeight, type: 'add' }]
         });
       }
       if (current.avgIns > 170) {
-        const actions: any[] = [{ name: "橄欖油", weight: baseSuggestWeight, type: 'add' }];
+        const actions: any[] = [{ id: 'olive', weight: baseSuggestWeight, type: 'add' }];
         const coconutItem = items.find(i => i.oilId === 'coconut');
-        if (coconutItem && coconutItem.weight > 50) actions.push({ name: "椰子油", weight: 50, type: 'reduce' });
-        suggestions.push({ text: "INS 過高 (皂體脆裂)", qualityKey: 'ins', actions });
+        if (coconutItem && coconutItem.weight > 50) actions.push({ id: 'coconut', weight: 50, type: 'reduce' });
+        suggestions.push({ text: t('calculator.suggestions.ins_high'), qualityKey: 'ins', actions });
       }
       if (current.qualities.cleansing > QUALITY_RANGES.cleansing.max) {
-        const actions: any[] = [{ name: "乳油木果脂", weight: baseSuggestWeight, type: 'add' }];
+        const actions: any[] = [{ id: 'shea_butter', weight: baseSuggestWeight, type: 'add' }];
         const coconutItem = items.find(i => i.oilId === 'coconut');
-        if (coconutItem && coconutItem.weight > 50) actions.push({ name: "椰子油", weight: 50, type: 'reduce' });
-        suggestions.push({ text: "清潔力太強 (易乾癢)", qualityKey: 'cleansing', actions });
+        if (coconutItem && coconutItem.weight > 50) actions.push({ id: 'coconut', weight: 50, type: 'reduce' });
+        suggestions.push({ text: t('calculator.suggestions.cleansing_high'), qualityKey: 'cleansing', actions });
       }
       if (current.qualities.conditioning < QUALITY_RANGES.conditioning.min) {
         suggestions.push({
-          text: "保濕不足 (不夠滋潤)",
+          text: t('calculator.suggestions.conditioning_low'),
           qualityKey: 'conditioning',
-          actions: [{ name: "酪梨油", weight: baseSuggestWeight, type: 'add' }, { name: "甜杏仁油", weight: baseSuggestWeight, type: 'add' }]
+          actions: [{ id: 'avocado', weight: baseSuggestWeight, type: 'add' }, { id: 'sweet_almond', weight: baseSuggestWeight, type: 'add' }]
         });
       }
       if (current.qualities.hardness < QUALITY_RANGES.hardness.min) {
         suggestions.push({
-          text: "硬度不足 (不耐洗)",
+          text: t('calculator.suggestions.hardness_low'),
           qualityKey: 'hardness',
-          actions: [{ name: "棕櫚油", weight: baseSuggestWeight, type: 'add' }, { name: "可可脂", weight: 30, type: 'add' }]
+          actions: [{ id: 'palm', weight: baseSuggestWeight, type: 'add' }, { id: 'cocoa_butter', weight: 30, type: 'add' }]
         });
       }
     }
 
-    let personality = "計算中";
+    let personality = "calculating";
     if (current.totalWeight > 0) {
-      if (current.qualities.conditioning > 60) personality = "溫和滋潤型";
-      else if (current.qualities.cleansing > 18) personality = "強效清爽型";
-      else if (current.qualities.hardness > 45) personality = "極硬耐用型";
-      else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "平衡穩定型";
+      if (current.qualities.conditioning > 60) personality = "gentle";
+      else if (current.qualities.cleansing > 18) personality = "cleansing";
+      else if (current.qualities.hardness > 45) personality = "hard";
+      else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "balanced";
     }
 
     return {
@@ -1017,8 +1024,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
     return results.calculate(previewItems);
   }, [items, hoveredOil, previewMode, hoveringSlotIndex, previewWeightChange, results]);
 
-  const applyAdjustment = (oilName: string, weightChange: number, type: 'add' | 'reduce') => {
-    const oil = OILS.find(o => o.name.includes(oilName));
+  const applyAdjustment = (oilId: string, weightChange: number, type: 'add' | 'reduce') => {
+    const oil = OILS.find(o => o.id === oilId);
     if (oil) {
       const actualChange = type === 'reduce' ? -weightChange : weightChange;
       const existingIdx = items.findIndex(i => i.oilId === oil.id);
@@ -1054,7 +1061,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
   const addAdditive = () => {
     setAdditives([...additives, {
       id: Date.now().toString(),
-      name: '精油/添加物',
+      name: t('calculator.additive_name_placeholder', '精油/添加物'),
       type: 'scent',
       amount: 0,
       unit: 'g',
@@ -1081,9 +1088,9 @@ export const Calculator: React.FC<CalculatorProps> = ({
 
   const getStatusUI = (status: 'none' | 'low' | 'high' | 'ideal') => {
     switch (status) {
-      case 'low': return { color: 'text-orange-500', bg: 'bg-orange-500', icon: <AlertCircle className="w-4 h-4" />, label: '數值不足' };
-      case 'high': return { color: 'text-red-500', bg: 'bg-red-500', icon: <AlertTriangle className="w-4 h-4" />, label: '數值過度' };
-      case 'ideal': return { color: 'text-green-600', bg: 'bg-green-600', icon: <CheckCircle2 className="w-4 h-4" />, label: '理想比例' };
+      case 'low': return { color: 'text-orange-500', bg: 'bg-orange-500', icon: <AlertCircle className="w-4 h-4" />, label: t('calculator.status_low', '數值不足') };
+      case 'high': return { color: 'text-red-500', bg: 'bg-red-500', icon: <AlertTriangle className="w-4 h-4" />, label: t('calculator.status_high', '數值過度') };
+      case 'ideal': return { color: 'text-green-600', bg: 'bg-green-600', icon: <CheckCircle2 className="w-4 h-4" />, label: t('calculator.status_ideal', '理想比例') };
       default: return { color: 'text-stone-300', bg: 'bg-stone-100', icon: null, label: '' };
     }
   };
@@ -1097,8 +1104,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
     // 生成檔名：[配方名稱]_[模式]_[日期時間].pdf
     const now = new Date();
     const dateStr = `${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
-    const modeStr = pdfMode === 'beginner' ? '新手版' : '專家版';
-    const fileName = `${recipeName || '手工皂配方'}_${modeStr}_${dateStr}.pdf`;
+    const modeStr = pdfMode === 'beginner' ? t('calculator.beginner_pdf') : t('calculator.expert_pdf');
+    const fileName = `${recipeName || t('calculator.default_recipe_name', '手工皂配方')}_${modeStr}_${dateStr}.pdf`;
 
     const opt = {
       margin: 10,
@@ -1171,12 +1178,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <CalcIcon className="w-5 h-5 text-amber-500" />
               </div>
               <div className="flex flex-col min-w-0">
-                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-none truncate">1. 配方組成 <span className="text-stone-500 font-bold ml-1 hidden sm:inline">(Recipe)</span></h2>
+                <h2 className="text-xl md:text-2xl font-black tracking-tight leading-none truncate">{t('calculator.recipe_section')} <span className="text-stone-500 font-bold ml-1 hidden sm:inline">(Recipe)</span></h2>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest shrink-0">目前名稱:</span>
+                  <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest shrink-0">{t('calculator.current_name')}:</span>
                   <input
                     type="text"
-                    placeholder="點擊輸入配方名稱..."
+                    placeholder={t('calculator.input_placeholder')}
                     value={recipeName}
                     onChange={(e) => setRecipeName(e.target.value)}
                     className="bg-transparent border-none text-amber-400 text-sm font-black p-0 outline-none focus:ring-0 placeholder:text-stone-600 w-full sm:w-48 truncate"
@@ -1191,13 +1198,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   onClick={() => setPdfMode('beginner')}
                   className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${pdfMode === 'beginner' ? 'bg-green-600 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
                 >
-                  新手 PDF
+                  {t('calculator.beginner_pdf')}
                 </button>
                 <button
                   onClick={() => setPdfMode('expert')}
                   className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${pdfMode === 'expert' ? 'bg-stone-600 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
                 >
-                  專家 PDF
+                  {t('calculator.expert_pdf')}
                 </button>
               </div>
 
@@ -1206,13 +1213,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   onClick={() => setInputMode('weight')}
                   className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'weight' ? 'bg-amber-500 text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
                 >
-                  克 (g)
+                  {t('calculator.unit_g')}
                 </button>
                 <button
                   onClick={() => setInputMode('percent')}
                   className={`px-3 py-1.5 rounded text-[10px] font-black uppercase tracking-widest transition-all ${inputMode === 'percent' ? 'theme-bg-primary text-white shadow-sm' : 'text-stone-400 hover:text-white'}`}
                 >
-                  比例 (%)
+                  {t('calculator.unit_percent')}
                 </button>
               </div>
               <button
@@ -1221,7 +1228,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
-                懶人包
+                {t('calculator.presets_btn')}
               </button>
               <button
                 onClick={() => setShowLibrary(!showLibrary)}
@@ -1229,7 +1236,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   }`}
               >
                 <FolderOpen className="w-3.5 h-3.5" />
-                配方庫{savedRecipes.length > 0 ? ` (${savedRecipes.length})` : ''}
+                {t('calculator.library_btn')}{savedRecipes.length > 0 ? ` (${savedRecipes.length})` : ''}
               </button>
               <button
                 onClick={() => setShowCost(!showCost)}
@@ -1237,15 +1244,15 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   }`}
               >
                 <DollarSign className="w-3.5 h-3.5" />
-                成本模式
+                {t('calculator.cost_mode')}
               </button>
               <button
                 onClick={() => setShowProductionMode(true)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-full border border-blue-700 transition-all text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 active:scale-95 shadow-lg shadow-blue-500/20"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">開始製作</span>
-                <span className="sm:hidden">製作</span>
+                <span className="hidden sm:inline">{t('calculator.start_production')}</span>
+                <span className="sm:hidden">{t('production.title')}</span>
               </button>
               <button
                 onClick={handleDownloadPDF}
@@ -1258,14 +1265,14 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 ) : (
                   <Printer className="w-3.5 h-3.5" />
                 )}
-                <span className="hidden sm:inline">{isDownloading ? '正在生成 PDF...' : '另存為 PDF'}</span>
-                <span className="sm:hidden">{isDownloading ? '生成中..' : '存 PDF'}</span>
+                <span className="hidden sm:inline">{isDownloading ? t('calculator.generating_pdf') : t('calculator.save_pdf')}</span>
+                <span className="sm:hidden">{isDownloading ? '生成..' : 'PDF'}</span>
               </button>
               {results.totalWeight > 0 && (
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full border border-white/20">
                   <Activity className="w-3.5 h-3.5 text-amber-400" />
                   <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 truncate max-w-[120px]">
-                    {results.personality}
+                    {t(`calculator.personality.${results.personality}`, results.personality)}
                   </span>
                 </div>
               )}
@@ -1309,16 +1316,16 @@ export const Calculator: React.FC<CalculatorProps> = ({
                     <div className="absolute -inset-4 theme-bg-light rounded-full blur-2xl animate-pulse" />
                     <img src="soap_empty.png" alt="Happy Soap" className="w-48 h-48 object-contain relative z-10 drop-shadow-xl" />
                   </div>
-                  <h3 className="text-2xl font-black text-stone-800 mb-2 tracking-tight">開始調配您的第一塊完美手工皂吧！</h3>
+                  <h3 className="text-2xl font-black text-stone-800 mb-2 tracking-tight">{t('calculator.empty_title')}</h3>
                   <p className="text-stone-400 font-bold max-w-xs leading-relaxed mb-8">
-                    選擇下方的「新增油脂」或使用「懶人包」，<br />展開您的專業打皂旅程。
+                    {t('calculator.empty_desc')}
                   </p>
                   <button
                     onClick={() => addItem()}
                     className="flex items-center gap-2 px-8 py-4 theme-bg-primary text-white rounded-2xl font-black shadow-lg shadow-amber-200/20 hover:opacity-90 transition-all active:scale-95"
                   >
                     <PlusCircle className="w-5 h-5" />
-                    新增第一項油脂
+                    {t('calculator.add_first_oil')}
                   </button>
                 </div>
               )}
@@ -1391,7 +1398,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                         <button
                           onClick={() => removeItem(index)}
                           className="p-4 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all active:scale-90 h-14 w-14 flex items-center justify-center flex-shrink-0"
-                          title="移除油脂"
+                          title={t('calculator.remove_oil')}
                         >
                           <Trash2 className="w-6 h-6" />
                         </button>
@@ -1404,7 +1411,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                           <div className="bg-amber-600 p-2 rounded-lg shadow-sm">
                             <Tag className="w-4 h-4 text-white" />
                           </div>
-                          <span className="text-sm font-black text-amber-900 tracking-tight">自訂成本</span>
+                          <span className="text-sm font-black text-amber-900 tracking-tight">{t('calculator.custom_cost')}</span>
                           <div className="relative flex items-center bg-white border-2 border-amber-500 focus-within:border-amber-700 rounded-xl overflow-hidden h-11 transition-all shadow-md">
                             <span className="pl-3 pr-1.5 text-sm font-black text-amber-700">$</span>
                             <input
@@ -1414,13 +1421,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
                               className="w-28 px-1 py-1 text-base font-black text-stone-900 bg-white outline-none placeholder-stone-300"
                               placeholder="0"
                             />
-                            <span className="px-3 text-xs font-black text-stone-600 border-l border-amber-100 bg-amber-50/50 h-full flex items-center uppercase tracking-tighter">/ kg</span>
+                            <span className="px-3 text-xs font-black text-stone-600 border-l border-amber-100 bg-amber-50/50 h-full flex items-center uppercase tracking-tighter">/ {t('calculator.kg_unit')}</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3 bg-white px-5 py-2.5 rounded-xl border-2 border-stone-100 shadow-sm transition-all group-hover:theme-border-primary">
                           <div className="text-right">
-                            <span className="text-[10px] font-black text-stone-500 uppercase block leading-none mb-1">分項小計 (Cost)</span>
+                            <span className="text-[10px] font-black text-stone-500 uppercase block leading-none mb-1">{t('calculator.item_subtotal')}</span>
                             <div className="flex items-baseline gap-1">
                               <span className="text-xs font-black theme-text-primary">$</span>
                               <NumberTicker
@@ -1440,7 +1447,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
               })}
             </div>
             <button onClick={addItem} className="flex-1 py-5 border-2 border-dashed border-stone-200 rounded-2xl text-stone-400 font-black hover:bg-white hover:theme-border-primary hover:theme-text-primary transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-[0.98]">
-              <PlusCircle className="w-5 h-5" /> 新增油脂材料
+              <PlusCircle className="w-5 h-5" /> {t('calculator.add_oil_material')}
             </button>
           </div>
 
@@ -1448,12 +1455,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
           <div className="mt-8 border-t border-stone-100 pt-8 animate-fade-in">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 uppercase tracking-widest">
-                <Sparkles className="w-4 h-4 text-amber-500" /> 創意添加物 (Additives)
+                <Sparkles className="w-4 h-4 text-amber-500" /> {t('calculator.section_additives')}
               </h3>
               {results.scentConcentration > 3 && (
                 <div className={`text-[10px] font-black px-2 py-1 rounded-lg flex items-center gap-1.5 ${results.scentConcentration > 5 ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
                   <AlertTriangle className="w-3 h-3" />
-                  精油濃度: {results.scentConcentration.toFixed(1)}% ({results.scentConcentration > 5 ? '危險' : '過高'})
+                  {t('calculator.scent_concentration')}: {results.scentConcentration.toFixed(1)}% ({results.scentConcentration > 5 ? t('calculator.danger') : t('calculator.too_high')})
                 </div>
               )}
             </div>
@@ -1469,16 +1476,16 @@ export const Calculator: React.FC<CalculatorProps> = ({
                         onChange={(e) => updateAdditive(index, 'type', e.target.value)}
                         className="bg-white border border-stone-200 text-[10px] font-black rounded-lg px-2 py-2 outline-none focus:border-amber-500 w-24 shrink-0"
                       >
-                        <option value="scent">精油/香氛</option>
-                        <option value="color">色粉/礦泥</option>
-                        <option value="other">其他添加</option>
+                        <option value="scent">{t('production.additive_type_scent')}</option>
+                        <option value="color">{t('production.additive_type_color')}</option>
+                        <option value="other">{t('production.additive_type_other')}</option>
                       </select>
                       <input
                         type="text"
                         value={additive.name}
                         onChange={(e) => updateAdditive(index, 'name', e.target.value)}
                         className="flex-1 bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm font-bold text-stone-700 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 placeholder:text-stone-300 min-w-[120px]"
-                        placeholder="材料名稱"
+                        placeholder={t('calculator.additive_name_placeholder')}
                       />
                     </div>
 
@@ -1510,7 +1517,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                             placeholder="0"
                             className="w-full pl-4 pr-1 py-1.5 text-xs font-bold text-amber-900 placeholder:text-amber-300 outline-none"
                           />
-                          <span className="pr-2 text-[8px] text-amber-500 font-black absolute right-0 pointer-events-none">$/kg</span>
+                          <span className="pr-2 text-[8px] text-amber-500 font-black absolute right-0 pointer-events-none">$/{t('calculator.kg_unit')}</span>
                         </div>
                       )}
 
@@ -1529,7 +1536,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 onClick={addAdditive}
                 className="w-full py-3 border border-dashed border-stone-200 rounded-2xl text-stone-400 font-bold text-xs hover:bg-stone-50 hover:text-stone-600 transition-all flex items-center justify-center gap-2"
               >
-                <PlusCircle className="w-4 h-4" /> 新增添加物
+                <PlusCircle className="w-4 h-4" /> {t('calculator.add_additive_btn')}
               </button>
             </div>
           </div>
@@ -1540,7 +1547,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
               className="w-full py-5 theme-bg-primary text-white rounded-2xl font-black hover:opacity-90 transition-all flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               disabled={items.length === 0 || results.totalWeight === 0}
             >
-              <Save className="w-5 h-5 text-white/70" /> 儲存目前配方
+              <Save className="w-5 h-5 text-white/70" /> {t('calculator.save_recipe_btn')}
             </button>
           </div>
 
@@ -1548,11 +1555,11 @@ export const Calculator: React.FC<CalculatorProps> = ({
           {showLibrary && (
             <div className="mt-6 border-t border-stone-100 pt-6 animate-fade-in">
               <h3 className="text-sm font-black text-stone-400 mb-4 flex items-center gap-2 uppercase tracking-widest">
-                <History className="w-4 h-4" /> 已儲存的配方
+                <History className="w-4 h-4" /> {t('calculator.saved_recipes_title')}
               </h3>
               {savedRecipes.length === 0 ? (
                 <div className="p-8 text-center bg-stone-50 rounded-2xl border border-stone-100 italic text-stone-400 text-sm">
-                  目前還沒有任何存檔配方...
+                  {t('calculator.no_saved_recipes_hint')}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1565,7 +1572,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       }}>
                         <p className="font-black text-stone-800 truncate group-hover:theme-text-primary transition-colors">{recipe.name}</p>
                         <p className="text-[10px] text-stone-400 font-bold mt-1">
-                          {new Date(recipe.date).toLocaleDateString()} · {recipe.items.length} 支油脂 · {recipe.items.reduce((acc, i) => acc + i.weight, 0)}g
+                          {new Date(recipe.date).toLocaleDateString()} · {recipe.items.length}{t('calculator.oils_count_unit')} · {recipe.items.reduce((acc, i) => acc + i.weight, 0)}g
                         </p>
                       </div>
                       <div className="flex gap-1 ml-4">
@@ -1602,25 +1609,25 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <div className="w-16 h-16 theme-bg-light rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Bookmark className="w-8 h-8 theme-text-primary" />
                 </div>
-                <h3 className="text-2xl font-black text-stone-800">為您的配方命名</h3>
-                <p className="text-stone-500 text-sm mt-2">命名後即可存入您的私藏配方庫</p>
+                <h3 className="text-2xl font-black text-stone-800">{t('calculator.save_modal_title')}</h3>
+                <p className="text-stone-500 text-sm mt-2">{t('calculator.save_modal_desc')}</p>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mt-1">配方總額 (成本)</p>
+                  <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mt-1">{t('calculator.total_cost_label')}</p>
                   {showCost && (
                     <CostChart items={items} oilPrices={oilPrices} />
                   )}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-stone-400 uppercase tracking-widest pl-1">配方名稱</label>
+                  <label className="text-xs font-black text-stone-400 uppercase tracking-widest pl-1">{t('calculator.recipe_name_label')}</label>
                   <div className="relative">
                     <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-300" />
                     <input
                       type="text"
                       autoFocus
-                      placeholder="例如：春季薰衣草馬賽皂"
+                      placeholder={t('calculator.recipe_name_placeholder')}
                       className="w-full pl-12 pr-4 py-4 bg-stone-50 border-2 border-stone-100 rounded-2xl outline-none focus:border-amber-500 focus:bg-white transition-all font-bold text-stone-800"
                       value={recipeName}
                       onChange={(e) => setRecipeName(e.target.value)}
@@ -1646,7 +1653,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   }}
                   className="w-full py-4 theme-bg-primary text-white rounded-2xl font-black hover:opacity-90 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale shadow-lg shadow-amber-600/10 flex items-center justify-center gap-2"
                 >
-                  確 定 儲 存
+                  {t('calculator.confirm_save')}
                 </button>
               </div>
             </div>
@@ -1660,12 +1667,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
           <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
             <div className="bg-amber-600 p-6 text-white flex items-center gap-3">
               <Scale className="w-6 h-6" />
-              <h2 className="text-xl font-bold tracking-tight">2. 精確稱重清單</h2>
+              <h2 className="text-xl font-bold tracking-tight">{t('calculator.section_weighing')}</h2>
             </div>
             <div className="p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 border-b border-stone-100 pb-2 uppercase tracking-widest">油相部分</h3>
+                  <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 border-b border-stone-100 pb-2 uppercase tracking-widest">{t('calculator.oil_phase')}</h3>
                   <div className="space-y-2">
                     {items.filter(i => i.weight > 0).map((item, idx) => {
                       const oil = OILS.find(o => o.id === item.oilId);
@@ -1682,13 +1689,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 {/* Additives Section in Weighing List */}
                 {results.calculatedAdditives.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 border-b border-stone-100 pb-2 uppercase tracking-widest">添加物</h3>
+                    <h3 className="text-sm font-black text-stone-400 flex items-center gap-2 border-b border-stone-100 pb-2 uppercase tracking-widest">{t('calculator.additives_section')}</h3>
                     <div className="space-y-2">
                       {results.calculatedAdditives.map((add, idx) => (
                         <div key={idx} className="flex justify-between items-center p-3 hover:bg-stone-50 rounded-xl transition-colors">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-stone-600">{add.name}</span>
-                            {add.type === 'scent' && <span className="text-[10px] text-amber-500 bg-amber-50 px-1 py-0.5 rounded">香氛</span>}
+                            {add.type === 'scent' && <span className="text-[10px] text-amber-500 bg-amber-50 px-1 py-0.5 rounded">{t('calculator.scent_tag')}</span>}
                           </div>
                           <div className="text-right">
                             <span className="font-black text-stone-800">{add.calculatedWeight.toFixed(1)} g</span>
@@ -1701,15 +1708,15 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 )}
 
                 <div className="space-y-4">
-                  <h3 className="text-sm font-black text-stone-400 border-b border-stone-100 pb-2 uppercase tracking-widest">鹼水部分</h3>
+                  <h3 className="text-sm font-black text-stone-400 border-b border-stone-100 pb-2 uppercase tracking-widest">{t('calculator.lye_phase')}</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-sm font-bold text-red-800 border border-red-100">
-                      <span>NaOH 需求量</span>
+                      <span>{t('calculator.naoh_req')}</span>
                       <NumberTicker value={results.totalNaoh} precision={1} suffix=" g" className="font-black" />
                     </div>
                     <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100 flex-wrap gap-y-2">
                       <div className="flex items-center gap-2">
-                        <span>水量要求</span>
+                        <span>{t('calculator.water_req')}</span>
                         <div className="flex items-center bg-white rounded-lg border border-blue-200 px-2 py-0.5">
                           <input
                             type="number"
@@ -1720,7 +1727,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                             onChange={(e) => setWaterRatio(Number(e.target.value))}
                             className="w-10 bg-transparent outline-none text-center font-black text-xs p-0"
                           />
-                          <span className="text-[10px] text-blue-400 opacity-60">倍</span>
+                          <span className="text-[10px] text-blue-400 opacity-60">{t('calculator.multiplier_unit')}</span>
                         </div>
                       </div>
                       <NumberTicker value={results.water} precision={1} suffix=" g" className="font-black" />
@@ -1728,13 +1735,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
 
                     {results.totalAdditiveWeight > 0 && (
                       <div className="flex justify-between p-4 bg-stone-100 rounded-2xl text-sm font-bold text-stone-600 border border-stone-200">
-                        <span>添加物總重</span>
+                        <span>{t('calculator.total_additive')}</span>
                         <NumberTicker value={results.totalAdditiveWeight} precision={1} suffix=" g" className="font-black" />
                       </div>
                     )}
 
                     <div className="flex justify-between p-4 bg-stone-800 rounded-2xl text-sm font-bold text-white border border-stone-700 mt-2">
-                      <span>總製皂量 (Batch Size)</span>
+                      <span>{t('calculator.total_batch')}</span>
                       <NumberTicker value={results.totalBatchWeight} precision={1} suffix=" g" className="font-black text-amber-400" />
                     </div>
                   </div>
@@ -1749,19 +1756,19 @@ export const Calculator: React.FC<CalculatorProps> = ({
               <div className="bg-stone-900 p-6 text-white flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <DollarSign className="w-6 h-6 text-amber-400" />
-                  <h2 className="text-xl font-bold tracking-tight">3. 成本估算報告 (Estimates)</h2>
+                  <h2 className="text-xl font-bold tracking-tight">{t('calculator.section_estimates')}</h2>
                 </div>
-                <div className="px-3 py-1 bg-amber-500 rounded text-[10px] font-black uppercase">僅供參考</div>
+                <div className="px-3 py-1 bg-amber-500 rounded text-[10px] font-black uppercase">{t('calculator.for_reference_only')}</div>
               </div>
               <div className="p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
-                    <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">總原料成本</span>
+                    <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">{t('calculator.total_material_cost')}</span>
                     <NumberTicker value={results.totalCost} prefix="$" className="text-4xl font-black text-stone-800 tabular-nums" />
                     <span className="text-xs font-bold text-stone-400 ml-1">TWD</span>
                   </div>
                   <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
-                    <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">平均成本 (/100g)</span>
+                    <span className="text-[10px] font-black text-stone-400 uppercase block mb-1">{t('calculator.avg_cost')}</span>
                     <NumberTicker
                       value={results.totalWeight > 0 ? Math.round((results.totalCost / results.totalWeight) * 100) : 0}
                       prefix="$"
@@ -1771,10 +1778,10 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   <div className="p-6 bg-amber-50 rounded-2xl border border-amber-200 flex flex-col justify-center">
                     <div className="flex items-center gap-2 mb-2">
                       <Info className="w-4 h-4 text-amber-600" />
-                      <span className="text-xs font-black text-amber-700">小撇步</span>
+                      <span className="text-xs font-black text-amber-700">{t('calculator.tip_title')}</span>
                     </div>
                     <p className="text-xs text-amber-800/70 font-medium leading-relaxed">
-                      調整橄欖油或椰子油比例，通常是控制成本最快的方法。
+                      {t('calculator.cost_tip')}
                     </p>
                   </div>
                 </div>
@@ -1790,7 +1797,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
             <div className="bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden">
               <div className="bg-stone-800 p-4 text-white flex items-center gap-3">
                 <Waves className="w-5 h-5 text-amber-500" />
-                <h2 className="text-sm font-bold tracking-tight">數據對比 (Radar Chart)</h2>
+                <h2 className="text-sm font-bold tracking-tight">{t('calculator.radar_chart_title')}</h2>
               </div>
               <div className="p-4 flex flex-col items-center bg-stone-50/30">
                 <RadarChart qualities={results.qualities} previewQualities={previewResults?.qualities} />
@@ -1799,18 +1806,18 @@ export const Calculator: React.FC<CalculatorProps> = ({
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 relative">
               {hoveredOil && (
                 <div className={`absolute top-0 right-0 p-3 text-white text-[10px] font-black rounded-bl-2xl z-20 animate-pulse shadow-lg flex items-center gap-2 ${previewMode === 'reduction' ? 'bg-rose-500' : 'theme-bg-primary'}`}>
-                  <Sparkles className="w-3 h-3" /> 數據預覽：{hoveredOil.name} {previewMode === 'reduction' ? '(調降)' : '(補位)'}
+                  <Sparkles className="w-3 h-3" /> {t('calculator.preview_data')}: {t(hoveredOil.name)} {previewMode === 'reduction' ? t('calculator.preview_reduction') : t('calculator.preview_addition')}
                 </div>
               )}
               <div className="flex items-center justify-between mb-8 pb-4 border-b border-stone-100">
                 <h3 className="text-lg font-black text-stone-800 flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 theme-text-primary" /> 指標分析
+                  <TrendingUp className="w-6 h-6 theme-text-primary" /> {t('calculator.analysis_title')}
                 </h3>
                 <div className="text-right">
-                  <Tooltip text="INS 值代表肥皂的軟硬程度，建議範圍在 120-170 之間。">
+                  <Tooltip text={t('calculator.ins_tooltip')}>
                     <div className="flex flex-col items-end cursor-help group/ins min-h-[64px] justify-center">
                       <p className="text-[10px] font-black text-stone-400 uppercase mb-1 flex items-center gap-1 group-hover/ins:theme-text-primary transition-colors">
-                        配方總 INS 值 <Info className="w-3 h-3" />
+                        {t('calculator.ins_label')} <Info className="w-3 h-3" />
                       </p>
                       <div className="flex items-center justify-end gap-2">
                         {results.avgIns > 0 && (
@@ -1826,7 +1833,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                           />
                           {previewResults?.avgIns !== undefined && previewResults.avgIns !== results.avgIns && (
                             <div className={`absolute -bottom-4 right-0 text-[10px] font-black animate-pulse whitespace-nowrap ${previewResults.avgIns > results.avgIns ? 'text-green-500' : 'text-red-500'}`}>
-                              預估: {previewResults.avgIns > results.avgIns ? '↑' : '↓'} {previewResults.avgIns}
+                              {t('calculator.preview_prefix')}: {previewResults.avgIns > results.avgIns ? '↑' : '↓'} {previewResults.avgIns}
                             </div>
                           )}
                         </div>
@@ -1850,16 +1857,16 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       <div className="flex items-end justify-between">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <Tooltip text={ui.label === '清潔' ? '去除油脂的能力' : ui.label === '保濕' ? '成皂後的滋潤程度' : ui.label === '硬度' ? '皂體的堅硬耐久度' : ui.label === '起泡' ? '產生大泡沫的能力' : '保護小泡沫不破裂的能力'}>
+                            <Tooltip text={t(`${ui.label}_tip`)}>
                               <div className="flex items-center gap-2 cursor-help group/item">
                                 <span className={`p-1 rounded bg-stone-50 group-hover/item:bg-amber-50 transition-colors`}>
                                   <QualityIcon name={ui.icon} color={ui.color} size={14} />
                                 </span>
-                                <span className="text-sm font-black text-stone-700 group-hover/item:text-amber-600 transition-colors">{ui.label}</span>
+                                <span className="text-sm font-black text-stone-700 group-hover/item:text-amber-600 transition-colors">{t(ui.label)}</span>
                               </div>
                             </Tooltip>
                           </div>
-                          <p className="text-[10px] font-bold text-stone-400 ml-8">建議區間：{range.min} ~ {range.max}</p>
+                          <p className="text-[10px] font-bold text-stone-400 ml-8">{t('calculator.ideal_range_prefix')}: {range.min} ~ {range.max}</p>
                         </div>
 
                         <div className="text-right h-12 flex flex-col justify-center">
@@ -1876,7 +1883,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                           <div className="h-4 relative">
                             {previewVal !== null && previewVal !== val && (
                               <div className={`absolute right-0 top-0 text-[10px] font-black animate-pulse flex items-center justify-end gap-1 ${previewVal > val ? 'text-green-500' : 'text-red-500'}`}>
-                                預估變動: {previewVal > val ? '↑' : '↓'} {previewVal}
+                                {t('calculator.preview_prefix')}: {previewVal > val ? '↑' : '↓'} {previewVal}
                               </div>
                             )}
                           </div>
@@ -1908,13 +1915,13 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <ZapIcon className="w-40 h-40" />
               </div>
               <h3 className="text-xl font-black mb-6 flex items-center gap-3 text-amber-400 relative z-10">
-                <Lightbulb className="w-6 h-6" /> 配方專家建議
+                <Lightbulb className="w-6 h-6" /> {t('calculator.suggestion_title')}
               </h3>
               {results.suggestions.length > 0 ? (
                 <div className="space-y-4 relative z-10">
                   {results.suggestions.map((s, i) => (
                     <div key={`s-${s.qualityKey}-${i}`} className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                      <p className={`text-sm font-black mb-3 ${s.text.includes('過高') || s.text.includes('太強') ? 'text-rose-400' : 'text-orange-400'}`}>{s.text}</p>
+                      <p className={`text-sm font-black mb-3 ${s.text.includes('過高') || s.text.includes('Too high') || s.text.includes('太強') ? 'text-rose-400' : 'text-orange-400'}`}>{s.text}</p>
                       <div className="flex flex-wrap gap-2">
                         {s.actions.map((action) => {
                           const oilObj = OILS.find(o => o.name.includes(action.name));
@@ -1941,7 +1948,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                               ) : (
                                 <PlusCircle className="w-3.5 h-3.5 text-amber-500 group-hover:text-white" />
                               )}
-                              <span>{isReduce ? '建議調降' : '建議補位'}：{action.name} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
+                              <span>{isReduce ? t('calculator.action_reduce') : t('calculator.action_add')}：{t(action.name)} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
                             </button>
                           );
                         })}
@@ -1953,8 +1960,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <div className="flex items-center gap-4 py-6 bg-green-500/10 rounded-2xl border border-green-500/20 p-4 text-green-400 relative z-10">
                   <CheckCircle2 className="w-8 h-8" />
                   <div>
-                    <span className="text-lg font-black leading-none">數據平衡！</span>
-                    <p className="text-[10px] opacity-60">配方指標符合專家推薦範圍。</p>
+                    <span className="text-lg font-black leading-none">{t('calculator.balanced')}</span>
+                    <p className="text-[10px] opacity-60">{t('calculator.balanced_desc')}</p>
                   </div>
                 </div>
               )}

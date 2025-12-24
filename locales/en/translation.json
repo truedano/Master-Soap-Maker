@@ -1,0 +1,387 @@
+{
+    "oils": {
+        "coconut": {
+            "name": "Coconut Oil",
+            "description": "[Foundation] Strong cleansing power, produces large and rich bubbles. Essential foundation oil for making soap hard."
+        },
+        "palm": {
+            "name": "Palm Oil",
+            "description": "[Foundation] Provides hardness to the soap, preventing it from melting or deforming easily. Fine bubbles."
+        },
+        "olive": {
+            "name": "Olive Oil",
+            "description": "[Foundation] Rich in vitamins and squalene. Mild feeling, suitable for infants and sensitive skin."
+        },
+        "avocado": {
+            "name": "Avocado Oil",
+            "description": "[Premium Moisturizer] Deep cleansing, extremely mild. Rich in Vitamin A, D, E. Great for allergy-prone or dry skin."
+        },
+        "macadamia": {
+            "name": "Macadamia Oil",
+            "description": "[Premium Moisturizer] King of anti-aging. Rich in palmitoleic acid, close to human sebum, easily absorbed."
+        },
+        "hazelnut": {
+            "name": "Hazelnut Oil",
+            "description": "[Premium Moisturizer] Moisturizing and refreshing. Excellent penetration, does not clog pores."
+        },
+        "apricot": {
+            "name": "Apricot Kernel Oil",
+            "description": "[Premium Moisturizer] Light and breathable. More refreshing than sweet almond oil, rich in minerals."
+        },
+        "sweet_almond": {
+            "name": "Sweet Almond Oil",
+            "description": "[Premium Moisturizer] Soft and smooth feeling, softens skin and improves dryness."
+        },
+        "cocoa_butter": {
+            "name": "Cocoa Butter",
+            "description": "[Texture Adjuster] Increases hardness and protective film. Suggest 5~15% addition."
+        },
+        "mango_butter": {
+            "name": "Mango Butter",
+            "description": "[Texture Adjuster] Gentler than cocoa butter. Good moisturizing effect, increases smoothness."
+        },
+        "shea_butter": {
+            "name": "Shea Butter",
+            "description": "[Texture Adjuster] Protective barrier, anti-allergic, creamy wash feel. Rich in non-saponifiable matters."
+        },
+        "jojoba": {
+            "name": "Jojoba Oil",
+            "description": "[Texture Adjuster] Liquid wax, hair miracle. Forms a protective layer, often used for superfatting."
+        },
+        "neem": {
+            "name": "Neem Oil",
+            "description": "[Special Treatment] Antibacterial and insect repellent. Great for eczema and acne."
+        },
+        "wheatgerm": {
+            "name": "Wheatgerm Oil",
+            "description": "[Special Treatment] Antioxidant, rich in Vitamin E. Delays rancidity of soap."
+        },
+        "evening_primrose": {
+            "name": "Evening Primrose Oil",
+            "description": "[Special Treatment] Improves atopic dermatitis. Rich in linoleic acid, easily oxidized."
+        },
+        "rosehip": {
+            "name": "Rosehip Oil",
+            "description": "[Special Treatment] Repairs scars, whitening. Helps fade fine lines and pigments."
+        },
+        "castor": {
+            "name": "Castor Oil",
+            "description": "[Special Treatment] Increases bubble quantity and persistence. Produces silk-like dense bubbles."
+        },
+        "camellia": {
+            "name": "Camellia Oil",
+            "description": "[Local & Affordable] Oriental Olive Oil. Great for hair and scalp. Refreshing than olive oil."
+        },
+        "camellia_oil": {
+            "name": "Camellia Oil",
+            "description": "[Premium Hair Care] Also known as bitter tea oil. Excellent for hair and scalp, refreshing and moisturizing."
+        },
+        "canola": {
+            "name": "Canola Oil",
+            "description": "[Local & Affordable] Training oil, highly moisturizing. Affordable price, fine and mild bubbles."
+        },
+        "lard": {
+            "name": "Lard",
+            "description": "[Local & Affordable] Traditional, extremely hard. Dense bubbles, snow-white and mild soap body."
+        }
+    },
+    "faqs": {
+        "powder": {
+            "symptom": "Soap Powder (White Ash)",
+            "reason": "Surface contact with air, insufficient insulation, excessive water",
+            "solution": "Cut off the surface. Spray alcohol or seal with plastic wrap next time."
+        },
+        "sponge": {
+            "symptom": "Spongy (Brittle and Crumbly)",
+            "reason": "Insufficient mixing, low temperature causing oil-lye separation",
+            "solution": "Failure. Can be grated and hot-processed into re-batched soap."
+        },
+        "sweat": {
+            "symptom": "Sweating (Water Drops)",
+            "reason": "High environmental humidity",
+            "solution": "Wipe dry. Use a dehumidifier to keep dry."
+        },
+        "seperation": {
+            "symptom": "Oil-Water Separation",
+            "reason": "Insufficient mixing before molding",
+            "solution": "Pour back into pot and continue mixing to Trace."
+        },
+        "volcano": {
+            "symptom": "Volcano",
+            "reason": "Excessive temperature, high sugar content in honey/milk",
+            "solution": "No insulation needed for sugar/milk soaps. May even need refrigeration."
+        }
+    },
+    "quality": {
+        "hardness": "Hardness",
+        "cleansing": "Cleansing",
+        "conditioning": "Conditioning",
+        "bubbly": "Bubbly",
+        "creamy": "Creamy",
+        "ui": {
+            "cleansing": "Cleansing",
+            "cleansing_tip": "Ability to remove oil",
+            "bubbly": "Bubbly",
+            "bubbly_tip": "Ability to produce large bubbles",
+            "hardness": "Hardness",
+            "hardness_tip": "Durability and hardness of the soap body",
+            "conditioning": "Moisturizing",
+            "conditioning_tip": "Moisturizing level after washing",
+            "creamy": "Stable",
+            "creamy_tip": "Ability to protect small bubbles from breaking"
+        }
+    },
+    "presets": {
+        "marseille": {
+            "name": "Classic Marseille (72% Olive)",
+            "description": "Most classic formula, extremely mild and moisturizing."
+        },
+        "cleansing": {
+            "name": "Extra Cleansing (Laundry/Shampoo)",
+            "description": "High coconut oil ratio, providing powerful cleaning."
+        },
+        "moisturizing": {
+            "name": "High Moisturizing (Dry Skin)",
+            "description": "Includes Shea Butter and Avocado oil, great for autumn/winter."
+        }
+    },
+    "app": {
+        "title": "Master Soap Maker",
+        "title_prefix": "Soap Maker",
+        "title_highlight": "Master",
+        "library_title": "Oil Library & Ranking",
+        "library_desc": "Learn about oil properties and market prices",
+        "search_placeholder": "Search oils or properties",
+        "sort_none": "-- Select Ranking --",
+        "sort_hardness": "🏆 Sort by Hardness",
+        "sort_cleansing": "🏆 Sort by Cleansing",
+        "sort_conditioning": "🏆 Sort by Moisturizing",
+        "sort_bubbly": "🏆 Sort by Bubbly",
+        "sort_creamy": "🏆 Sort by Stable",
+        "sort_ins": "🏆 Sort by INS Value",
+        "add_to_formula": "Add to Formula",
+        "timeline_title": "Operation Timeline",
+        "status_title": "System Status",
+        "status_desc": "All formulas and cost estimates are completed locally. Data is private and offline-compatible.",
+        "copyright": "For educational use only. Wear protective gear when handling chemicals.",
+        "tabs": {
+            "calculator": "Calculator",
+            "library": "Oil Library",
+            "production": "Production",
+            "faq": "FAQ"
+        },
+        "footer_note": "Educational purposes only. Please wear safety gear.",
+        "theme": {
+            "classic": "Classic Orange",
+            "natural": "Natural Green",
+            "minimal": "Minimalist Black"
+        }
+    },
+    "calculator": {
+        "sap_label": "SAP Value",
+        "recipe_section": "1. Recipe Composition",
+        "current_name": "Current Name",
+        "input_placeholder": "Click to enter recipe name...",
+        "beginner_pdf": "Beginner PDF",
+        "expert_pdf": "Expert PDF",
+        "unit_g": "Grams (g)",
+        "unit_percent": "Ratio (%)",
+        "presets_btn": "Presets",
+        "library_btn": "Library",
+        "cost_mode": "Cost Mode",
+        "start_production": "Production",
+        "save_pdf": "Save as PDF",
+        "add_oil": "Add Oil Material",
+        "add_additive": "Add Additive",
+        "save_recipe": "Save Recipe",
+        "saved_recipes": "Saved Recipes",
+        "no_saved_recipes": "No saved recipes yet...",
+        "weighing_section": "2. Precision Weighing List",
+        "oil_phase": "Oil Phase",
+        "additives_section": "Additives",
+        "lye_phase": "Lye Phase",
+        "naoh_req": "NaOH Required",
+        "water_req": "Water Required",
+        "water_multiplier": "x",
+        "total_additive": "Total Additives",
+        "total_batch": "Total Batch Size",
+        "cost_report": "3. Cost Estimates",
+        "total_cost": "Total Material Cost",
+        "avg_cost": "Avg Cost (/100g)",
+        "cost_tip_title": "Pro Tip",
+        "oils_count_unit": " oils",
+        "radar_title": "Data Comparison (Radar Chart)",
+        "current_data": "Current",
+        "ideal_range": "Ideal",
+        "analysis_title": "Metrics Analysis",
+        "ins_label": "Total INS Value",
+        "ins_tooltip": "INS value represents the soap hardness. Recommend 120-170.",
+        "target_range": "Target Range",
+        "suggestion_title": "Expert Suggestions",
+        "balanced": "Balanced!",
+        "balanced_desc": "Metrics meet expert recommended ranges.",
+        "multiplier": "Ratio",
+        "total_oil_weight": "Total Oil Weight",
+        "ingredients": "Oils List",
+        "oil_name": "Oil Name",
+        "weight_g": "Weight (g)",
+        "ratio_percent": "Ratio (%)",
+        "insight_prefix": "Role",
+        "additives": "Additives List",
+        "additive_name": "Ingredient Name",
+        "additive_type": "Type",
+        "ideal_range_label": "Suggest",
+        "pro_report_title": "Professional Recipe Report",
+        "date": "Date",
+        "white_insight": "Insight",
+        "personality_prefix": "This soap is classified as",
+        "insight_conditioning": "Extremely moisturizing, very suitable for dry skin or winter use.",
+        "insight_cleansing": "Powerful cleansing, feels refreshing, best choice for summer.",
+        "insight_balanced": "All data are balanced, suitable formula for all skin types.",
+        "insight_ins_low": "Current INS is low, recommend extending curing time for better hardness.",
+        "notes_title": "Practical Records & Notes",
+        "notes_hint": "Suggest recording: Temp, Humidity, Mixing time, Insulation method.",
+        "checklist_title": "WorkFlow Checklist",
+        "timeline_title": "Curing Timeline",
+        "date_created": "Date Created",
+        "date_unmold": "Unmold Date",
+        "date_cut": "Cut Date",
+        "date_use": "Ready Date",
+        "date_use_hint": "Suggest 4-6 weeks",
+        "ph_record": "pH Test Record",
+        "test_n": "Test",
+        "default_recipe_name": "Unnamed Pro Recipe",
+        "generating_pdf": "Generating PDF...",
+        "save_as_pdf": "Save as PDF",
+        "empty_title": "Start Creating Your Perfect Soap!",
+        "empty_desc": "Add oils below or use presets to start your journey.",
+        "add_first_oil": "Add First Oil",
+        "remove_oil": "Remove Oil",
+        "custom_cost": "Custom Cost",
+        "item_subtotal": "Subtotal",
+        "add_oil_material": "Add Oil Material",
+        "section_additives": "1.5 Creative Additives",
+        "scent_concentration": "Scent Concentration",
+        "danger": "Danger",
+        "too_high": "Too High",
+        "additive_name_placeholder": "Ingredient Name",
+        "add_additive_btn": "Add Additive",
+        "save_recipe_btn": "Save Current Recipe",
+        "saved_recipes_title": "Saved Recipes",
+        "no_saved_recipes_hint": "No saved recipes yet...",
+        "save_modal_title": "Name Your Recipe",
+        "save_modal_desc": "Save to your private recipe library",
+        "total_cost_label": "Total Cost",
+        "recipe_name_label": "Recipe Name",
+        "recipe_name_placeholder": "e.g., Spring Lavender Marseille",
+        "confirm_save": "Confirm Save",
+        "section_weighing": "2. Precision Weighing List",
+        "scent_tag": "Scent",
+        "multiplier_unit": "x",
+        "section_estimates": "3. Cost Estimates Report",
+        "for_reference_only": "For Reference Only",
+        "total_material_cost": "Total Material Cost",
+        "tip_title": "Pro Tip",
+        "cost_tip": "Adjusting olive or coconut oil proportions is usually the quickest way to control costs.",
+        "radar_chart_title": "Data Comparison (Radar Chart)",
+        "recommended": "REC",
+        "select_oil": "Select Oil",
+        "quality_metrics": "Quality Metrics",
+        "personality": {
+            "calculating": "Calculating",
+            "gentle": "Gentle & Moisturizing",
+            "cleansing": "Intense & Refreshing",
+            "hard": "Extreme Hardness",
+            "balanced": "Stable & Balanced"
+        },
+        "suggestions": {
+            "ins_low": "INS too low (Soft soap)",
+            "ins_high": "INS too high (Brittle soap)",
+            "cleansing_high": "Cleansing too strong (Dry skin)",
+            "conditioning_low": "Insufficient moisturizing",
+            "hardness_low": "Insufficient hardness"
+        },
+        "preview_data": "Preview Data",
+        "preview_reduction": "(Reduction)",
+        "preview_addition": "(Addition)",
+        "preview_prefix": "Est",
+        "ideal_range_prefix": "Target Range",
+        "action_reduce": "Reduce",
+        "action_add": "Add",
+        "kg_unit": "kg",
+        "tab_name": "Calculator"
+    },
+    "production": {
+        "title": "Production Order",
+        "tab_name": "Production Guide",
+        "guide_title": "Production Guide",
+        "temp_control": "Temperature Control",
+        "temp_desc": "Best temperature range for oil-lye mixing to ensure reaction smoothness.",
+        "safety_title": "Safety Prototypes",
+        "safety_gloves": "Wear alkali-resistant gloves",
+        "safety_goggles": "Wear safety goggles during entire process",
+        "safety_clothes": "Wear long-sleeved clothing",
+        "safety_ventilation": "Maintain good ventilation",
+        "step_lye_title": "1. Lye Solution",
+        "step_lye_desc": "Add NaOH into water (NEVER add water to NaOH!) and stir until transparent.",
+        "step_oil_title": "2. Oil Prep",
+        "step_oil_desc": "Heat and dissolve solid oils, mix with liquid oils, adjust to match lye temp.",
+        "step_mix_title": "3. Mixing",
+        "step_mix_desc": "Slowly pour lye into oils, stir continuously until it reaches Trace.",
+        "step_mold_title": "4. Molding",
+        "step_mold_desc": "Add scents or additives, stir well, pour into mold and tap gently.",
+        "unmold_title": "Unmolding & Curing",
+        "unmold_desc": "Insulate for 24h after molding. Improper insulation may cause soda ash or glycerin rivers.",
+        "step_mix_trace": "Mixing to Trace",
+        "step_insulate": "Molding & Insulation",
+        "step_cure": "Curing Process",
+        "step_mix_trace_desc": "approx. 20-60 mins",
+        "step_insulate_desc": "24 hours static",
+        "step_cure_desc": "4-8 weeks",
+        "safety_reminder": "Make sure goggles, mask, and gloves are ready.",
+        "step_1_oil": "Weighing Oils",
+        "step_1_5_additive": "Weighing Additives",
+        "step_2_flow": "Production Workflow",
+        "finish": "Finish",
+        "additive_type_scent": "Essential Oil/Scent",
+        "additive_type_color": "Colorant",
+        "additive_type_other": "Other",
+        "safety_title_beginner": "⚠️ [Beginner Safety standards]",
+        "safety_title_expert": "[Safety Standards]",
+        "safety_msg_beginner": "NaOH is highly corrosive! Always add NaOH to water. Wear goggles and gloves. Rinse immediately if contact occurs.",
+        "safety_msg_expert": "NaOH is corrosive. Wear long sleeves, goggles, and gloves. Use in well-ventilated areas.",
+        "step_prep_gear": "Prepare safety gear (gloves, mask, goggles)",
+        "step_lye_prep": "Make lye solution: add NaOH to water",
+        "step_oil_weigh": "Weigh oils and heat to 40-45°C",
+        "step_mix_lye_oil": "Mix lye and oil (temp diff < 5°C)",
+        "step_blend_trace": "Blend until Trace",
+        "step_additives": "Add additives (scents, etc.)",
+        "step_mold_insulate": "Pour into mold and insulate for 24-48h",
+        "steps": {
+            "lye": "Lye Prep (cool to 40-45°C)",
+            "oil": "Oil Prep (heat to 40-45°C)",
+            "mix": "Mixing (blend to Trace)",
+            "additive": "Add Scents/Additives",
+            "mold": "Molding & Insulation",
+            "additive_hint": "Recommend adding before molding",
+            "other_hint": "Add as needed"
+        }
+    },
+    "faq": {
+        "title": "Troubleshooting",
+        "reason_label": "Possible Reason",
+        "solution_label": "Solution",
+        "tab_name": "QA"
+    },
+    "safety_alert": {
+        "title": "Safety First: NaOH Usage Guidelines",
+        "order_title": "Order is Crucial!",
+        "order_desc": "Always add NaOH to water. NEVER add water to NaOH to avoid splashing and burns.",
+        "ventilation_title": "Ensure Good Ventilation",
+        "ventilation_desc": "Lye solution produces fumes. Operate under a hood or outdoors, avoid direct inhalation.",
+        "protection_title": "Wear Protective Gear",
+        "protection_desc": "Wear goggles and gloves throughout. Rinse immediately with plenty of water if splashed.",
+        "material_title": "Material Restrictions",
+        "material_desc": "DO NOT use aluminum. Recommend 304 stainless steel or heat-resistant PP5 / Glass."
+    }
+}

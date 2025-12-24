@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ReactGA from 'react-ga4';
 import { SafetyAlert } from './components/SafetyAlert';
 import { Calculator, MiniQualityBars } from './components/Calculator';
-import { FAQS, OILS, QUALITY_UI } from './constants';
+import { FAQS, OILS } from './constants';
+import { useTranslation } from 'react-i18next';
 import { SectionType, OilData, FormulaItem, SavedFormula, AdditiveItem } from './types';
 import {
   Droplets,
@@ -10,11 +11,8 @@ import {
   Clock,
   HelpCircle,
   ArrowRight,
-  CheckCircle2,
   Box,
   ThermometerSun,
-  Info,
-  Sparkles,
   BookOpen,
   Search,
   Filter,
@@ -22,14 +20,11 @@ import {
   ChevronDown,
   Shield,
   ShieldCheck,
-  Zap,
-  Waves,
-  DollarSign,
-  FileText,
   Palette,
   Leaf,
-  Moon,
-  Sun
+  Sun,
+  FileText,
+  DollarSign
 } from 'lucide-react';
 
 const STORAGE_KEY_PRICES = 'soap_master_oil_prices';
@@ -39,6 +34,13 @@ const STORAGE_KEY_THEME = 'soap_master_theme';
 const STORAGE_KEY_WATER_RATIO = 'soap_master_water_ratio';
 
 const App: React.FC = () => {
+  const { t, i18n } = useTranslation();
+
+  // 動態更新頁面標題
+  useEffect(() => {
+    document.title = t('app.title');
+  }, [t]);
+
   const [activeTab, setActiveTab] = useState<SectionType>(SectionType.CALCULATOR);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof OilData | 'none'>('none');
@@ -85,7 +87,6 @@ const App: React.FC = () => {
     if (savedFormula) {
       try {
         const parsed = JSON.parse(savedFormula);
-        // 如果是舊版資料可能沒有 additives 欄位，回傳空陣列
         return parsed.additives || [];
       } catch (e) {
         return [];
@@ -127,22 +128,19 @@ const App: React.FC = () => {
     return saved ? parseFloat(saved) : 2.3;
   });
 
-  // 當價格改變時，同步到 localStorage
+  // 同步到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
   }, [oilPrices]);
 
-  // 當配方改變時，同步到 localStorage (包含油脂與添加物)
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_FORMULA, JSON.stringify({ items: formulaItems, additives: additiveItems }));
   }, [formulaItems, additiveItems]);
 
-  // 當存檔列表改變時，同步到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_SAVED_RECIPES, JSON.stringify(savedRecipes));
   }, [savedRecipes]);
 
-  // 當水量倍數改變時，同步到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_WATER_RATIO, waterRatio.toString());
   }, [waterRatio]);
@@ -164,12 +162,9 @@ const App: React.FC = () => {
     let result = [...OILS];
     if (searchTerm) {
       result = result.filter(o =>
-        o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.description.includes(searchTerm)
+        t(o.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t(o.description).includes(searchTerm)
       );
-
-      // 追蹤搜尋行為 (使用 debounce 概念，或者簡單追蹤)
-      // 這裡簡單記錄，實際上可能需要防抖
       ReactGA.event({
         category: "Engagement",
         action: "Search_Oil_Encyclopedia",
@@ -180,7 +175,7 @@ const App: React.FC = () => {
       result.sort((a, b) => (b[sortBy] as number) - (a[sortBy] as number));
     }
     return result;
-  }, [searchTerm, sortBy]);
+  }, [searchTerm, sortBy, t]);
 
   const handleAddOilToFormula = (oilId: string) => {
     setFormulaItems(prev => {
@@ -254,35 +249,51 @@ const App: React.FC = () => {
                   <Droplets className="w-6 h-6 md:w-8 md:h-8 text-amber-700 theme-text-primary" />
                 </div>
                 <h1 className="text-lg md:text-2xl font-black text-stone-800 tracking-tight">
-                  手工皂<span className="text-amber-600 theme-text-primary">製作大師</span>
+                  {t('app.title_prefix')}<span className="text-amber-600 theme-text-primary">{t('app.title_highlight')}</span>
                   <span className="ml-2 text-[10px] text-stone-400 font-bold bg-stone-100 px-1.5 py-0.5 rounded-full align-middle md:inline-block hidden">
                     v{(import.meta.env as any).PACKAGE_VERSION}
                   </span>
                 </h1>
               </div>
 
-              {/* 主題切換按鈕 */}
+              {/* 主題切換 */}
               <div className="hidden sm:flex bg-stone-100 p-1 rounded-xl border border-stone-200 ml-4">
                 <button
                   onClick={() => setTheme('classic')}
                   className={`p-2 rounded-lg transition-all ${theme === 'classic' ? 'bg-white shadow-sm text-amber-600' : 'text-stone-400 hover:text-stone-600'}`}
-                  title="經典橘"
+                  title={t('app.theme.classic')}
                 >
                   <Palette className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setTheme('natural')}
                   className={`p-2 rounded-lg transition-all ${theme === 'natural' ? 'bg-green-100 shadow-sm text-green-700' : 'text-stone-400 hover:text-stone-600'}`}
-                  title="自然綠"
+                  title={t('app.theme.natural')}
                 >
                   <Leaf className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setTheme('minimal')}
                   className={`p-2 rounded-lg transition-all ${theme === 'minimal' ? 'bg-stone-800 shadow-sm text-white' : 'text-stone-400 hover:text-stone-600'}`}
-                  title="極簡黑"
+                  title={t('app.theme.minimal')}
                 >
                   <Sun className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 語言切換 */}
+              <div className="hidden sm:flex bg-stone-100 p-1 rounded-xl border border-stone-200 ml-2">
+                <button
+                  onClick={() => i18n.changeLanguage('zh-TW')}
+                  className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${i18n.language === 'zh-TW' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
+                >
+                  繁中
+                </button>
+                <button
+                  onClick={() => i18n.changeLanguage('en')}
+                  className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${i18n.language === 'en' ? 'bg-white shadow-sm text-stone-800' : 'text-stone-400 hover:text-stone-600'}`}
+                >
+                  EN
                 </button>
               </div>
             </div>
@@ -290,11 +301,10 @@ const App: React.FC = () => {
             <nav className="flex w-full md:w-auto overflow-x-auto no-scrollbar pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
               <div className="flex flex-nowrap md:flex-wrap items-center gap-2 md:gap-4">
                 {[
-                  { id: SectionType.CALCULATOR, label: '配方計算' },
-                  { id: SectionType.PRE_PRODUCTION, label: '油脂百科' },
-                  { id: SectionType.PRODUCTION, label: '生產指南' },
-                  { id: SectionType.POST_PRODUCTION, label: '脫模晾皂' },
-                  { id: SectionType.FAQ, label: '問題排除' },
+                  { id: SectionType.CALCULATOR, label: t('app.tabs.calculator') },
+                  { id: SectionType.PRE_PRODUCTION, label: t('app.tabs.library') },
+                  { id: SectionType.PRODUCTION, label: t('app.tabs.production') },
+                  { id: SectionType.FAQ, label: t('app.tabs.faq') },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -320,7 +330,6 @@ const App: React.FC = () => {
 
         <div id="main-content" className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
           <div className="lg:col-span-8 space-y-8 md:space-y-12">
-
             {activeTab === SectionType.CALCULATOR && (
               <Calculator
                 items={formulaItems}
@@ -353,9 +362,9 @@ const App: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center gap-3">
                           <BookOpen className="text-amber-400 w-8 h-8" />
-                          <h2 className="text-2xl md:text-3xl font-black text-white">油脂百科與五力排行</h2>
+                          <h2 className="text-2xl md:text-3xl font-black text-white">{t('app.library_title')}</h2>
                         </div>
-                        <p className="text-stone-400 text-sm font-medium">深入了解油脂特性，並可查看市場參考成本</p>
+                        <p className="text-stone-400 text-sm font-medium">{t('app.library_desc')}</p>
                       </div>
                     </div>
 
@@ -364,7 +373,7 @@ const App: React.FC = () => {
                         <Search className="absolute left-4 top-3.5 w-5 h-5 text-stone-500" />
                         <input
                           type="text"
-                          placeholder="搜尋油脂名稱或特性"
+                          placeholder={t('app.search_placeholder')}
                           className="w-full bg-white/10 text-white border border-white/10 rounded-xl pl-12 pr-4 py-3.5 outline-none focus:ring-4 focus:ring-amber-500/30 transition-all font-medium placeholder:text-stone-600"
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
@@ -377,13 +386,13 @@ const App: React.FC = () => {
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value as any)}
                         >
-                          <option value="none">-- 選擇排行指標 --</option>
-                          <option value="hardness">🏆 按【硬度】排行</option>
-                          <option value="cleansing">🏆 按【清潔】排行</option>
-                          <option value="conditioning">🏆 按【保濕】排行</option>
-                          <option value="bubbly">🏆 按【起泡】排行</option>
-                          <option value="creamy">🏆 按【穩定】排行</option>
-                          <option value="ins">🏆 按【INS 值】排行</option>
+                          <option value="none">{t('app.sort_none')}</option>
+                          <option value="hardness">{t('app.sort_hardness')}</option>
+                          <option value="cleansing">{t('app.sort_cleansing')}</option>
+                          <option value="conditioning">{t('app.sort_conditioning')}</option>
+                          <option value="bubbly">{t('app.sort_bubbly')}</option>
+                          <option value="creamy">{t('app.sort_creamy')}</option>
+                          <option value="ins">{t('app.sort_ins')}</option>
                         </select>
                         <ChevronDown className="absolute right-4 top-4 w-4 h-4 text-stone-400 pointer-events-none" />
                       </div>
@@ -415,12 +424,12 @@ const App: React.FC = () => {
 
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex-1 min-w-0 pr-2">
-                            <h4 className="font-black text-stone-800 text-xl group-hover:text-amber-700 transition-colors truncate">{oil.name}</h4>
+                            <h4 className="font-black text-stone-800 text-xl group-hover:text-amber-700 transition-colors truncate">{t(oil.name)}</h4>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">皂化價: {oil.sap}</span>
+                              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-tighter">{t('calculator.sap_label')}: {oil.sap}</span>
                               <div className="flex items-center gap-1 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100">
                                 <DollarSign className="w-2.5 h-2.5 text-amber-600" />
-                                <span className="text-[10px] font-black text-amber-700">${currentPrice}/kg</span>
+                                <span className="text-[10px] font-black text-amber-700">${currentPrice}/{t('calculator.kg_unit')}</span>
                               </div>
                             </div>
                           </div>
@@ -434,13 +443,13 @@ const App: React.FC = () => {
                           <MiniQualityBars oil={oil} />
                         </div>
 
-                        <p className="text-stone-600 text-sm leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: oil.description }}></p>
+                        <p className="text-stone-600 text-sm leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: t(oil.description) }}></p>
 
                         <button
                           onClick={() => handleAddOilToFormula(oil.id)}
                           className="mt-2 w-full py-3 bg-amber-600 text-white text-xs font-black rounded-xl hover:bg-amber-700 transition-all flex items-center justify-center gap-2 uppercase tracking-widest shadow-md active:scale-95"
                         >
-                          加入配方計算 <ArrowRight className="w-4 h-4" />
+                          {t('app.add_to_formula')} <ArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     );
@@ -453,28 +462,28 @@ const App: React.FC = () => {
               <div className="space-y-8 animate-fade-in">
                 <div className="bg-amber-50 p-6 md:p-10 rounded-2xl md:rounded-3xl border border-amber-100">
                   <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-6 md:mb-8 flex items-center gap-3">
-                    <FlaskConical className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 生產指南 (Production Guide)
+                    <FlaskConical className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> {t('production.guide_title')}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
                       <h3 className="text-lg font-bold text-stone-800 mb-4 flex items-center gap-2">
-                        <ThermometerSun className="text-orange-500" /> 溫度控制 (Temperature)
+                        <ThermometerSun className="text-orange-500" /> {t('production.temp_control')}
                       </h3>
                       <div className="inline-flex items-center justify-center px-6 py-4 bg-orange-50 border-2 border-orange-100 rounded-2xl font-black text-3xl text-orange-700 shadow-inner">
                         40℃ ~ 45℃
                       </div>
-                      <p className="mt-4 text-sm text-stone-500 leading-relaxed">這是油鹼混合的最佳溫度區間，有助於反應順暢且不易產生皂粉。</p>
+                      <p className="mt-4 text-sm text-stone-500 leading-relaxed">{t('production.temp_desc')}</p>
                     </div>
 
                     <div className="bg-rose-50 p-6 rounded-2xl border border-rose-100">
                       <h3 className="text-lg font-bold text-rose-800 mb-4 flex items-center gap-2">
-                        <Shield className="text-rose-600" /> 安全防護 (Safety)
+                        <Shield className="text-rose-600" /> {t('production.safety_title')}
                       </h3>
                       <ul className="space-y-2 text-sm text-rose-700 font-bold">
-                        <li className="flex items-center gap-2">✅ 佩戴耐強鹼手套</li>
-                        <li className="flex items-center gap-2">✅ 全程戴上護目鏡</li>
-                        <li className="flex items-center gap-2">✅ 穿著長袖衣物</li>
-                        <li className="flex items-center gap-2">✅ 保持環境通風</li>
+                        <li className="flex items-center gap-2">✅ {t('production.safety_gloves')}</li>
+                        <li className="flex items-center gap-2">✅ {t('production.safety_goggles')}</li>
+                        <li className="flex items-center gap-2">✅ {t('production.safety_clothes')}</li>
+                        <li className="flex items-center gap-2">✅ {t('production.safety_ventilation')}</li>
                       </ul>
                     </div>
                   </div>
@@ -482,10 +491,10 @@ const App: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-6">
                   {[
-                    { title: "1. 溶鹼 (Lye Solution)", desc: "將氫氧化鈉加入水中（切記：不可將水加入氫氧化鈉！），攪拌至完全透明並等待降溫。" },
-                    { title: "2. 融油 (Oils)", desc: "將固態油脂加熱溶解，並與液態油混合均勻，調整溫度至與鹼水相近。" },
-                    { title: "3. 混合 (Mixing)", desc: "緩緩將鹼水倒入油脂中，手動或使用攪拌棒持續攪拌至呈現濃稠狀 (Trace)。" },
-                    { title: "4. 入模 (Molding)", desc: "加入精油或添加物後攪拌均勻，倒入模具並輕敲排出氣泡。" }
+                    { title: t('production.step_lye_title'), desc: t('production.step_lye_desc') },
+                    { title: t('production.step_oil_title'), desc: t('production.step_oil_desc') },
+                    { title: t('production.step_mix_title'), desc: t('production.step_mix_desc') },
+                    { title: t('production.step_mold_title'), desc: t('production.step_mold_desc') }
                   ].map((step, i) => (
                     <div key={i} className="flex gap-4 p-6 bg-white rounded-2xl border border-stone-100 shadow-sm">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-stone-900 text-white flex items-center justify-center font-black">{i + 1}</div>
@@ -499,34 +508,23 @@ const App: React.FC = () => {
               </div>
             )}
 
-            {activeTab === SectionType.POST_PRODUCTION && (
-              <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-sm border border-stone-100 animate-fade-in">
-                <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-6 md:mb-8 flex items-center gap-3">
-                  <Box className="text-stone-600 w-6 h-6 md:w-8 md:h-8" /> 脫模與晾皂
-                </h2>
-                <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100">
-                  <p className="text-stone-600 leading-relaxed">入模後需保溫 24 小時。保溫不足易產生「皂粉」；保溫過度則可能產生果凍效應。</p>
-                </div>
-              </div>
-            )}
-
             {activeTab === SectionType.FAQ && (
               <div className="bg-white p-6 md:p-10 rounded-2xl md:rounded-3xl shadow-sm border border-stone-100 animate-fade-in">
                 <h2 className="text-2xl md:text-3xl font-black text-stone-800 mb-8 md:mb-10 flex items-center gap-3">
-                  <HelpCircle className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> 常見問題排除
+                  <HelpCircle className="text-amber-600 w-6 h-6 md:w-8 md:h-8" /> {t('faq.title')}
                 </h2>
                 <div className="grid grid-cols-1 gap-6">
                   {FAQS.map((faq, i) => (
                     <div key={i} className="border border-stone-100 rounded-3xl p-6 hover:shadow-lg transition-all bg-white">
-                      <h3 className="text-xl font-black text-stone-800 mb-4">{faq.symptom}</h3>
+                      <h3 className="text-xl font-black text-stone-800 mb-4">{t(faq.symptom)}</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="bg-stone-50 p-4 rounded-xl text-sm">
-                          <p className="font-bold text-stone-400 mb-1">可能原因</p>
-                          <p className="text-stone-600">{faq.reason}</p>
+                          <p className="font-bold text-stone-400 mb-1">{t('faq.reason_label')}</p>
+                          <p className="text-stone-600">{t(faq.reason)}</p>
                         </div>
                         <div className="bg-amber-50 p-4 rounded-xl text-sm">
-                          <p className="font-bold text-amber-600 mb-1">解決方法</p>
-                          <p className="text-amber-900 font-bold">{faq.solution}</p>
+                          <p className="font-bold text-amber-600 mb-1">{t('faq.solution_label')}</p>
+                          <p className="text-amber-900 font-bold">{t(faq.solution)}</p>
                         </div>
                       </div>
                     </div>
@@ -534,39 +532,38 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
-
           </div>
 
           <div className="lg:col-span-4 space-y-6 md:space-y-8">
             <div className="p-8 bg-white border border-stone-100 rounded-3xl shadow-sm">
               <h3 className="font-black text-stone-800 mb-8 flex items-center gap-2 text-lg">
-                <Clock className="w-6 h-6 text-amber-600" /> 操作時間軸
+                <Clock className="w-6 h-6 text-amber-600" /> {t('app.timeline_title')}
               </h3>
               <div className="space-y-10 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[3px] before:bg-stone-50">
                 <div className="relative pl-10 group">
                   <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-amber-500 rounded-full z-10" />
-                  <p className="text-sm font-black text-stone-800">攪拌 Trace (皂化期)</p>
-                  <p className="text-xs text-stone-400 mt-1">約 20 ~ 60 分鐘</p>
+                  <p className="text-sm font-black text-stone-800">{t('production.step_mix_trace')}</p>
+                  <p className="text-xs text-stone-400 mt-1">{t('production.step_mix_trace_desc')}</p>
                 </div>
                 <div className="relative pl-10 group">
                   <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-stone-100 rounded-full z-10" />
-                  <p className="text-sm font-black text-stone-800">入模保溫</p>
-                  <p className="text-xs text-stone-400 mt-1">24 小時不可移動</p>
+                  <p className="text-sm font-black text-stone-800">{t('production.step_insulate')}</p>
+                  <p className="text-xs text-stone-400 mt-1">{t('production.step_insulate_desc')}</p>
                 </div>
                 <div className="relative pl-10 group">
                   <div className="absolute left-0 top-1 w-[26px] h-[26px] bg-white border-[6px] border-stone-100 rounded-full z-10" />
-                  <p className="text-sm font-black text-stone-800">熟成晾皂</p>
-                  <p className="text-xs text-stone-400 mt-1">4 ~ 8 週</p>
+                  <p className="text-sm font-black text-stone-800">{t('production.step_cure')}</p>
+                  <p className="text-xs text-stone-400 mt-1">{t('production.step_cure_desc')}</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-stone-50 p-6 rounded-3xl border border-stone-100">
               <h3 className="font-black text-stone-800 mb-4 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-green-600" /> 系統狀態
+                <ShieldCheck className="w-5 h-5 text-green-600" /> {t('app.status_title')}
               </h3>
               <p className="text-stone-500 text-xs leading-relaxed">
-                所有配方與成本估算皆在瀏覽器端即時完成，資料完全隱私且支援離線使用。
+                {t('app.status_desc')}
               </p>
             </div>
           </div>
@@ -574,7 +571,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="max-w-7xl mx-auto border-t border-stone-100 py-12 px-6 text-center mt-12 opacity-60 pb-32 md:pb-12 no-print">
-        <p className="text-stone-400 text-xs italic">本站僅供教學與輔助計算參考。進行化學反應時，請務必佩戴防護裝備。</p>
+        <p className="text-stone-400 text-xs italic">{t('app.footer_note')}</p>
       </footer>
 
       {/* 行動裝置底部導航 */}
@@ -587,7 +584,7 @@ const App: React.FC = () => {
             <div className={`p-2 rounded-2xl transition-all ${activeTab === SectionType.CALCULATOR ? 'bg-amber-100' : 'bg-transparent'}`}>
               <FlaskConical className="w-6 h-6" />
             </div>
-            <span className="text-[10px] font-black tracking-tighter uppercase">計算</span>
+            <span className="text-[10px] font-black tracking-tighter uppercase">{t('app.tabs.calculator')}</span>
           </button>
 
           <button
@@ -597,7 +594,7 @@ const App: React.FC = () => {
             <div className={`p-2 rounded-2xl transition-all ${activeTab === SectionType.PRODUCTION ? 'bg-blue-100' : 'bg-transparent'}`}>
               <FileText className="w-6 h-6" />
             </div>
-            <span className="text-[10px] font-black tracking-tighter uppercase">生產指南</span>
+            <span className="text-[10px] font-black tracking-tighter uppercase">{t('app.tabs.production')}</span>
           </button>
 
           <button
@@ -607,7 +604,7 @@ const App: React.FC = () => {
             <div className={`p-2 rounded-2xl transition-all ${activeTab === SectionType.FAQ ? 'bg-rose-100' : 'bg-transparent'}`}>
               <HelpCircle className="w-6 h-6" />
             </div>
-            <span className="text-[10px] font-black tracking-tighter uppercase">QA</span>
+            <span className="text-[10px] font-black tracking-tighter uppercase">{t('faq.tab_name')}</span>
           </button>
         </div>
       </div>
