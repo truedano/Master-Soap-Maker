@@ -40,6 +40,7 @@ export interface SavedFormula {
   name: string;
   items: FormulaItem[];
   waterRatio?: number;
+  lyeDiscount?: number;
   additives?: AdditiveItem[];
   date: number;
 }

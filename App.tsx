@@ -32,6 +32,7 @@ const STORAGE_KEY_FORMULA = 'soap_master_formula';
 const STORAGE_KEY_SAVED_RECIPES = 'soap_master_saved_recipes';
 const STORAGE_KEY_THEME = 'soap_master_theme';
 const STORAGE_KEY_WATER_RATIO = 'soap_master_water_ratio';
+const STORAGE_KEY_LYE_DISCOUNT = 'soap_master_lye_discount';
 
 const App: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -128,6 +129,12 @@ const App: React.FC = () => {
     return saved ? parseFloat(saved) : 2.3;
   });
 
+  // 管理減鹼比例
+  const [lyeDiscount, setLyeDiscount] = useState<number>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_LYE_DISCOUNT);
+    return saved ? parseFloat(saved) : 5; // 預設 5% 減鹼
+  });
+
   // 同步到 localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PRICES, JSON.stringify(oilPrices));
@@ -144,6 +151,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_WATER_RATIO, waterRatio.toString());
   }, [waterRatio]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_LYE_DISCOUNT, lyeDiscount.toString());
+  }, [lyeDiscount]);
 
   useEffect(() => {
     const mainContent = document.getElementById('main-content');
@@ -203,6 +214,7 @@ const App: React.FC = () => {
       items: [...formulaItems],
       additives: [...additiveItems],
       waterRatio,
+      lyeDiscount,
       date: Date.now()
     };
     setSavedRecipes(prev => [newRecipe, ...prev]);
@@ -229,6 +241,9 @@ const App: React.FC = () => {
     setAdditiveItems(recipe.additives || []);
     if (recipe.waterRatio) {
       setWaterRatio(recipe.waterRatio);
+    }
+    if (recipe.lyeDiscount !== undefined) {
+      setLyeDiscount(recipe.lyeDiscount);
     }
 
     ReactGA.event({
@@ -338,6 +353,8 @@ const App: React.FC = () => {
                 setAdditives={setAdditiveItems}
                 waterRatio={waterRatio}
                 setWaterRatio={setWaterRatio}
+                lyeDiscount={lyeDiscount}
+                setLyeDiscount={setLyeDiscount}
                 oilPrices={oilPrices}
                 onSetPrice={handleSetPrice}
                 savedRecipes={savedRecipes}

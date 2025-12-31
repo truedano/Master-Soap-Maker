@@ -546,8 +546,9 @@ const RecipePrintCard: React.FC<{
   items: FormulaItem[];
   results: any;
   waterRatio: number;
+  lyeDiscount: number;
   pdfMode: 'expert' | 'beginner';
-}> = ({ name, items, results, waterRatio, pdfMode }) => {
+}> = ({ name, items, results, waterRatio, lyeDiscount, pdfMode }) => {
   const { t } = useTranslation();
   const date = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
   const isBeginner = pdfMode === 'beginner';
@@ -570,7 +571,10 @@ const RecipePrintCard: React.FC<{
       <div className="grid grid-cols-3 gap-8 mb-12">
         <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
           <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{t('calculator.naoh_req')} (NaOH)</p>
-          <p className="text-3xl font-black">{results.totalNaoh}g</p>
+          <div className="flex items-baseline gap-1">
+            <p className="text-3xl font-black">{results.totalNaoh}g</p>
+            {lyeDiscount > 0 && <span className="text-[10px] text-red-500 font-bold">-{lyeDiscount}% SF</span>}
+          </div>
         </div>
         <div className="p-6 bg-stone-50 rounded-2xl border border-stone-100">
           <p className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-1">{t('calculator.water_req')} ({t('calculator.multiplier', '倍數')}: {waterRatio})</p>
@@ -802,6 +806,8 @@ interface CalculatorProps {
   setAdditives: React.Dispatch<React.SetStateAction<AdditiveItem[]>>;
   waterRatio: number;
   setWaterRatio: (ratio: number) => void;
+  lyeDiscount: number;
+  setLyeDiscount: (discount: number) => void;
   oilPrices: Record<string, number>;
   onSetPrice: (id: string, price: number) => void;
   onFindOil: (quality: string) => void;
@@ -818,6 +824,8 @@ export const Calculator: React.FC<CalculatorProps> = ({
   setAdditives,
   waterRatio,
   setWaterRatio,
+  lyeDiscount,
+  setLyeDiscount,
   oilPrices,
   onSetPrice,
   onFindOil,
@@ -982,16 +990,19 @@ export const Calculator: React.FC<CalculatorProps> = ({
       else if (current.avgIns >= 120 && current.avgIns <= 170) personality = "balanced";
     }
 
+    const discountedNaoh = current.totalNaoh * (1 - lyeDiscount / 100);
+
     return {
       calculate,
       totalWeight: current.totalWeight,
       totalAdditiveWeight: current.totalAdditiveWeight,
-      totalBatchWeight: current.totalBatchWeight,
+      totalBatchWeight: current.totalWeight + (discountedNaoh * waterRatio) + discountedNaoh + current.totalAdditiveWeight,
       calculatedAdditives: current.calculatedAdditives,
       scentConcentration: current.scentConcentration,
       avgIns: current.avgIns,
-      totalNaoh: Number(current.totalNaoh.toFixed(1)),
-      water: Number((current.totalNaoh * waterRatio).toFixed(1)),
+      totalNaoh: Number(discountedNaoh.toFixed(1)),
+      baseNaoh: Number(current.totalNaoh.toFixed(1)),
+      water: Number((discountedNaoh * waterRatio).toFixed(1)),
       totalCost: Math.round(current.totalCost),
       qualities: current.qualities,
       suggestions,
@@ -999,7 +1010,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
       personality,
       baseSuggestWeight
     };
-  }, [items, additives, waterRatio, oilPrices]);
+  }, [items, additives, waterRatio, lyeDiscount, oilPrices]);
 
   const previewResults = useMemo(() => {
     if (!hoveredOil) return null;
@@ -1154,6 +1165,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
             items={items}
             results={results}
             waterRatio={waterRatio}
+            lyeDiscount={lyeDiscount}
             pdfMode={pdfMode}
           />
         </div>
@@ -1297,12 +1309,12 @@ export const Calculator: React.FC<CalculatorProps> = ({
                   className="p-4 bg-white border border-stone-200 rounded-2xl text-left hover:theme-border-primary hover:shadow-md transition-all group"
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-black text-stone-700 group-hover:theme-text-primary transition-colors uppercase tracking-tight text-xs">{preset.name}</span>
+                    <span className="font-black text-stone-700 group-hover:theme-text-primary transition-colors uppercase tracking-tight text-xs">{t(preset.name)}</span>
                     <div className="w-5 h-5 bg-stone-100 rounded-full flex items-center justify-center">
                       <Zap className="w-3 h-3 text-stone-300 group-hover:theme-text-primary" />
                     </div>
                   </div>
-                  <p className="text-[10px] text-stone-400 font-bold leading-tight line-clamp-2">{preset.description}</p>
+                  <p className="text-[10px] text-stone-400 font-bold leading-tight line-clamp-2">{t(preset.description)}</p>
                 </button>
               ))}
             </div>
@@ -1678,7 +1690,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       const oil = OILS.find(o => o.id === item.oilId);
                       return (
                         <div key={idx} className="flex justify-between items-center p-3 hover:bg-stone-50 rounded-xl transition-colors">
-                          <span className="text-sm font-bold text-stone-600">{oil?.name}</span>
+                          <span className="text-sm font-bold text-stone-600">{t(oil?.name || '')}</span>
                           <span className="font-black text-amber-700">{item.weight} g</span>
                         </div>
                       );
@@ -1710,9 +1722,31 @@ export const Calculator: React.FC<CalculatorProps> = ({
                 <div className="space-y-4">
                   <h3 className="text-sm font-black text-stone-400 border-b border-stone-100 pb-2 uppercase tracking-widest">{t('calculator.lye_phase')}</h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-sm font-bold text-red-800 border border-red-100">
-                      <span>{t('calculator.naoh_req')}</span>
-                      <NumberTicker value={results.totalNaoh} precision={1} suffix=" g" className="font-black" />
+                    <div className="flex justify-between items-center p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-stone-500">{t('calculator.lye_discount')}</span>
+                        <span className="text-[10px] text-stone-400 font-bold">{t('calculator.superfatting')}</span>
+                      </div>
+                      <div className="flex items-center bg-white rounded-lg border border-stone-200 px-2 py-1">
+                        <input
+                          type="number"
+                          value={lyeDiscount}
+                          min="0"
+                          max="20"
+                          step="1"
+                          onChange={(e) => setLyeDiscount(Number(e.target.value))}
+                          className="w-10 bg-transparent outline-none text-center font-black text-xs p-0"
+                        />
+                        <span className="text-[10px] text-stone-400 opacity-60 font-black">%</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between p-4 bg-red-50 rounded-2xl text-sm font-bold text-red-800 border border-red-100 items-center">
+                      <div className="flex flex-col">
+                        <span>{t('calculator.naoh_req')}</span>
+                        {lyeDiscount > 0 && <span className="text-[10px] opacity-60">(Base: {results.baseNaoh}g)</span>}
+                      </div>
+                      <NumberTicker value={results.totalNaoh} precision={1} suffix=" g" className="font-black text-lg" />
                     </div>
                     <div className="flex justify-between p-4 bg-blue-50 rounded-2xl text-sm font-bold text-blue-800 border border-blue-100 flex-wrap gap-y-2">
                       <div className="flex items-center gap-2">
@@ -1924,11 +1958,11 @@ export const Calculator: React.FC<CalculatorProps> = ({
                       <p className={`text-sm font-black mb-3 ${s.text.includes('過高') || s.text.includes('Too high') || s.text.includes('太強') ? 'text-rose-400' : 'text-orange-400'}`}>{s.text}</p>
                       <div className="flex flex-wrap gap-2">
                         {s.actions.map((action) => {
-                          const oilObj = OILS.find(o => o.name.includes(action.name));
+                          const oilObj = OILS.find(o => o.id === action.id);
                           const isReduce = action.type === 'reduce';
                           return (
                             <button
-                              key={`${action.name}-${action.type}`}
+                              key={`${action.id}-${action.type}`}
                               onMouseEnter={() => {
                                 if (oilObj) {
                                   setHoveredOil(oilObj);
@@ -1937,7 +1971,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                                 }
                               }}
                               onMouseLeave={() => { setHoveredOil(null); setPreviewMode(null); }}
-                              onClick={() => applyAdjustment(action.name, action.weight, action.type)}
+                              onClick={() => applyAdjustment(action.id, action.weight, action.type)}
                               className={`flex items-center gap-1.5 text-[10px] px-3 py-2 rounded-xl font-bold transition-all group shadow-sm border border-transparent ${isReduce
                                 ? 'bg-rose-500/10 text-rose-300 hover:bg-rose-600 hover:text-white hover:border-rose-400'
                                 : 'bg-white/10 text-stone-300 hover:bg-amber-600 hover:text-white hover:border-amber-400'
@@ -1948,7 +1982,7 @@ export const Calculator: React.FC<CalculatorProps> = ({
                               ) : (
                                 <PlusCircle className="w-3.5 h-3.5 text-amber-500 group-hover:text-white" />
                               )}
-                              <span>{isReduce ? t('calculator.action_reduce') : t('calculator.action_add')}：{t(action.name)} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
+                              <span>{isReduce ? t('calculator.action_reduce') : t('calculator.action_add')}：{t(oilObj?.name || action.id)} <span className="opacity-60 ml-1">({isReduce ? '-' : '+'}{action.weight}g)</span></span>
                             </button>
                           );
                         })}
@@ -1978,7 +2012,6 @@ export const Calculator: React.FC<CalculatorProps> = ({
           />
         )}
       </div>
-    </div >
-
+    </div>
   );
 };
